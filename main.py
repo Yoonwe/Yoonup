@@ -405,11 +405,10 @@ workflow_app = build_workflow()
 
 
 def run_workflow(requirement: str, skill_id: str = None, max_attempts: int = MAX_ATTEMPTS) -> Dict[str, Any]:
-    """运行工作流的入口函数"""
-    # 未指定skill_id时自动识别
+    """运行工作流的入口函数，必须指定skill_id"""
+    # 强制必须传skill_id，避免误调用
     if not skill_id:
-        skill_id = detect_skill(requirement)
-        logger.info(f"[自动识别] 技能: {skill_id}")
+        raise ValueError(f"必须指定技能ID。可用技能: {list_skill_ids()}，请使用 --skill-id 参数指定")
     # 校验skill_id
     if get_skill_by_id(skill_id) is None:
         raise ValueError(f"技能ID不存在: {skill_id}，可用技能: {list_skill_ids()}")
@@ -453,7 +452,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="流程脚手架工作流")
     parser.add_argument("requirement", nargs="?", help="业务需求描述")
-    parser.add_argument("--skill-id", type=str, default=None, help="指定技能ID（如 python-app 或 web-js-app），不传则自动识别")
+    parser.add_argument("--skill-id", type=str, required=True, help="必填，指定技能ID（python-app 或 web-js-app）")
     parser.add_argument("--max-attempts", type=int, default=3, help="最大修复尝试次数")
     parser.add_argument("--list-skills", action="store_true", help="列出所有可用技能")
     args = parser.parse_args()

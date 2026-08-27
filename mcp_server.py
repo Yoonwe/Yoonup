@@ -11,12 +11,12 @@ mcp = FastMCP("流程脚手架工作流")
 
 
 @mcp.tool()
-def generate_workflow(requirement: str, skill_id: str = None, max_attempts: int = 3) -> str:
+def generate_workflow(requirement: str, skill_id: str, max_attempts: int = 3) -> str:
     """
     根据业务需求生成符合技能规范的Python流程代码，并自动校验修复。
     Args:
         requirement: 业务需求描述
-        skill_id: 技能ID（如 scaffold 或 web-extractor），不传则使用全部技能
+        skill_id: 必填，技能ID（python-app 或 web-js-app）
         max_attempts: 最大校验修复尝试次数，默认3次
     Returns:
         生成结果的JSON字符串

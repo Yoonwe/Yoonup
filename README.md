@@ -20,6 +20,8 @@
 
 不传技能ID时自动识别：含"网页/JS逆向/CDP/接口直连/浏览器"等关键词用 `web-js-app`，其余默认 `python-app`。
 
+**注意：三种调用方式均强制要求传入 `skill_id`，不传直接报错退出，避免误调用技能。**
+
 ## 快速开始
 
 ### 1. 安装依赖
@@ -38,10 +40,10 @@ cp .env.example .env
 ### 3. 命令行运行
 
 ```bash
-# 自动识别技能（推荐）
-python main.py "抓取飞书表格订单数据，查询快递100物流状态，回填飞书"
+# 必须指定 --skill-id，不传直接报错
+python main.py "抓取飞书表格订单数据，查询快递100物流状态，回填飞书" --skill-id python-app
 
-# 指定技能
+# 网页抓取技能
 python main.py "通过JS逆向获取电商后台订单数据" --skill-id web-js-app
 
 # 查看可用技能
@@ -57,12 +59,12 @@ python api_server.py
 调用：
 
 ```bash
-# 自动识别技能
+# skill_id 必填
 curl -X POST http://localhost:8000/run \
   -H "Content-Type: application/json" \
-  -d '{"requirement": "抓取飞书表格数据并写入数据库"}'
+  -d '{"requirement": "抓取飞书表格数据并写入数据库", "skill_id": "python-app"}'
 
-# 指定技能
+# 网页抓取技能
 curl -X POST http://localhost:8000/run \
   -H "Content-Type: application/json" \
   -d '{"requirement": "JS逆向抓取网页后台数据", "skill_id": "web-js-app"}'

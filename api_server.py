@@ -14,7 +14,7 @@ app = FastAPI(title="流程脚手架工作流 API", version="1.0.0")
 
 class WorkflowRequest(BaseModel):
     requirement: str
-    skill_id: Optional[str] = None
+    skill_id: str
     max_attempts: Optional[int] = 3
 
 
