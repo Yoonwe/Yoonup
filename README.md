@@ -1,45 +1,78 @@
 # 流程脚手架工作流引擎
 
-基于 LangGraph 的 AI 编程自动化工作流，按《流程脚手架规范》自动生成 Python 流程代码，并强制执行校验修复循环。
+基于 LangGraph 的 AI 编程自动化工作流。按技能规范自动生成代码，强制执行校验修复循环，最多3次，超次数通知用户。
 
 ## 工作流程
 
 ```
-需求解析 → 代码生成（按MD规范） → 校验（自动化+AI） → 条件判断
+需求解析 → 代码生成（按技能规范） → 校验（自动化+AI） → 条件判断
                                                          ├─ 通过 → 通知 → 结束
                                                          ├─ 不通过且<3次 → 修复（带上次失败项）→ 回到代码生成
                                                          └─ 不通过且≥3次 → 通知用户人工介入 → 结束
 ```
 
+## 技能列表
+
+| 技能ID | 名称 | 校验规则数 | 适用场景 |
+|--------|------|-----------|---------|
+| `scaffold` | 流程脚手架规范 | 61条 | 多步骤流程项目：飞书表格读写、API调用、通知、定时任务 |
+| `web-extractor` | 网页JS逆向直连数据抓取 | 16条 | 网页后台数据抓取：JS逆向、接口直连、CDP调试 |
+
+不传技能ID时自动识别：含"网页/JS逆向/CDP/接口直连/浏览器"等关键词用 `web-extractor`，其余默认 `scaffold`。
+
 ## 快速开始
 
-### 1. 配置环境变量
-```bash
-cp .env.example .env
-# 编辑 .env，填入 LLM_API_KEY 等配置
-```
+### 1. 安装依赖
 
-### 2. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. 命令行运行
+### 2. 配置环境变量
+
 ```bash
+cp .env.example .env
+# 编辑 .env，填入 LLM_API_KEY
+```
+
+### 3. 命令行运行
+
+```bash
+# 自动识别技能（推荐）
 python main.py "抓取飞书表格订单数据，查询快递100物流状态，回填飞书"
+
+# 指定技能
+python main.py "通过JS逆向获取电商后台订单数据" --skill-id web-extractor
+
+# 查看可用技能
+python main.py --list-skills
 ```
 
 ### 4. HTTP API 运行
+
 ```bash
 python api_server.py
-# 调用：
+```
+
+调用：
+
+```bash
+# 自动识别技能
 curl -X POST http://localhost:8000/run \
   -H "Content-Type: application/json" \
-  -d '{"requirement": "抓取飞书表格数据并写入数据库", "max_attempts": 3}'
+  -d '{"requirement": "抓取飞书表格数据并写入数据库"}'
+
+# 指定技能
+curl -X POST http://localhost:8000/run \
+  -H "Content-Type: application/json" \
+  -d '{"requirement": "JS逆向抓取网页后台数据", "skill_id": "web-extractor"}'
+
+# 查看技能列表
+curl http://localhost:8000/skills
 ```
 
 ### 5. MCP 接入（Cursor/豆包等）
-在支持MCP的AI工具中添加配置：
+
 ```json
 {
   "mcpServers": {
@@ -50,43 +83,35 @@ curl -X POST http://localhost:8000/run \
   }
 }
 ```
-然后在对话中说"调用流程脚手架生成工作流，需求是XXX"。
 
-### 6. Docker 部署
-```bash
-docker-compose up -d
-```
+可用工具：`generate_workflow(requirement, skill_id, max_attempts)`、`list_skills()`、`check_project(project_dir, skill_id)`
 
 ## 目录结构
 
 ```
 workflow-engine/
 ├── main.py              # LangGraph工作流主文件
-├── checklist.py         # 从MD抽取的60条校验清单
+├── checklist.py         # 校验清单（77条，按技能分组）
 ├── code_validator.py    # 自动化代码校验模块
 ├── api_server.py        # FastAPI HTTP接口
 ├── mcp_server.py        # MCP Server接口
-├── skills/              # 技能规范文档（MD）
-│   └── 流程脚手架规范.md
-├── output/              # 生成的流程项目输出目录
-├── Dockerfile
-├── docker-compose.yml
+├── skills.json          # 技能注册表（ID、名称、MD文件、校验类别）
+├── skills/              # 技能规范文档
+│   ├── 流程脚手架规范.md
+│   └── web-js-extractor.md
+├── output/              # 生成的项目输出目录
+├── AGENTS.md            # AI操作规范（修改同步GitHub等）
 ├── requirements.txt
 └── .env.example
 ```
 
-## 校验机制
-
-- **自动化检查**：40+条规则，检查文件结构、命名规范、锁机制、日志、飞书凭证等
-- **AI辅助检查**：20条语义规则，检查注释完整性、调用顺序、错误处理逻辑等
-- **循环修复**：校验不通过自动带上次失败条目重新生成，最多3次
-- **人工兜底**：超3次通知用户，列出未通过项
-
 ## 添加新技能
 
-1. 将新的MD规范文档放入 `skills/` 目录
-2. 在 `checklist.py` 中添加对应的校验条目
-3. 重启服务即生效
+1. 将MD规范文档放入 `skills/` 目录
+2. 在 `skills.json` 中注册：填写 `id`、`name`、`file`、`description`、`check_categories`
+3. 在 `checklist.py` 的 `CHECKLIST` 中添加对应校验条目，`category` 与 `skills.json` 的 `check_categories` 对应
+4. 在 `main.py` 的 `detect_skill()` 中添加自动识别关键词（可选）
+5. 提交并推送到GitHub
 
 ## 环境变量
 
