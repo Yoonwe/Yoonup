@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  workflow-engine:
+    build: .
+    container_name: workflow-engine
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./skills:/app/skills
+      - ./output:/app/output
+    restart: unless-stopped
