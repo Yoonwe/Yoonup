@@ -49,8 +49,15 @@ def get_llm() -> ChatOpenAI:
     )
 
 
-def read_skill_doc() -> str:
-    """读取技能规范文档"""
+def read_skill_doc(skill: str = None) -> str:
+    """读取技能规范文档，支持指定技能"""
+    if skill:
+        # 指定技能：优先精确匹配，再模糊匹配
+        for f in os.listdir(SKILLS_DIR):
+            if f.endswith('.md') and (skill in f or skill.lower() in f.lower()):
+                with open(os.path.join(SKILLS_DIR, f), 'r', encoding='utf-8') as fp:
+                    return fp.read()
+        # 没找到则返回全部
     docs = []
     for f in os.listdir(SKILLS_DIR):
         if f.endswith('.md'):
@@ -59,9 +66,15 @@ def read_skill_doc() -> str:
     return "\n\n".join(docs)
 
 
+def list_skills() -> list:
+    """列出所有可用技能"""
+    return [f.replace('.md', '') for f in os.listdir(SKILLS_DIR) if f.endswith('.md')]
+
+
 # ===== 状态定义 =====
 class WorkflowState(TypedDict):
     requirement: str                    # 用户需求
+    skill: str                          # 使用的技能名称
     project_name: str                   # 项目名称（文件夹名）
     project_dir: str                    # 生成的项目目录
     generated_files: Dict[str, str]     # 生成的文件 {文件名: 内容}
@@ -113,7 +126,7 @@ def generate_code(state: WorkflowState) -> WorkflowState:
     attempt = state.get("attempt", 0) + 1
     logger.info(f"[代码生成] 第 {attempt} 次生成")
 
-    skill_doc = read_skill_doc()
+    skill_doc = read_skill_doc(state.get("skill"))
     checklist = format_checklist_for_ai()
     requirement = state["requirement"]
     project_name = state["project_name"]
@@ -371,14 +384,15 @@ def build_workflow() -> StateGraph:
 workflow_app = build_workflow()
 
 
-def run_workflow(requirement: str, max_attempts: int = MAX_ATTEMPTS) -> Dict[str, Any]:
+def run_workflow(requirement: str, skill: str = None, max_attempts: int = MAX_ATTEMPTS) -> Dict[str, Any]:
     """运行工作流的入口函数"""
     logger.info(f"=" * 50)
-    logger.info(f"[工作流启动] 需求: {requirement[:50]}...")
+    logger.info(f"[工作流启动] 技能: {skill or '全部'}, 需求: {requirement[:50]}...")
     logger.info(f"=" * 50)
 
     result = workflow_app.invoke({
         "requirement": requirement,
+        "skill": skill or "",
         "project_name": "",
         "project_dir": "",
         "generated_files": {},
@@ -408,12 +422,22 @@ def run_workflow(requirement: str, max_attempts: int = MAX_ATTEMPTS) -> Dict[str
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        req = sys.argv[1]
-    else:
-        req = "抓取飞书多维表格中的订单数据，查询快递100物流状态，回填到飞书表格"
+    import argparse
+    parser = argparse.ArgumentParser(description="流程脚手架工作流")
+    parser.add_argument("requirement", nargs="?", help="业务需求描述")
+    parser.add_argument("--skill", type=str, default=None, help="指定技能名称（如 web-js-extractor 或 流程脚手架规范）")
+    parser.add_argument("--max-attempts", type=int, default=3, help="最大修复尝试次数")
+    parser.add_argument("--list-skills", action="store_true", help="列出所有可用技能")
+    args = parser.parse_args()
 
-    result = run_workflow(req)
+    if args.list_skills:
+        print("可用技能：")
+        for s in list_skills():
+            print(f"  - {s}")
+        sys.exit(0)
+
+    req = args.requirement or "抓取飞书多维表格中的订单数据，查询快递100物流状态，回填到飞书表格"
+    result = run_workflow(req, skill=args.skill, max_attempts=args.max_attempts)
     print("\n" + "=" * 50)
     print(f"状态: {result['status']}")
     print(f"项目: {result['project_name']}")

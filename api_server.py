@@ -14,6 +14,7 @@ app = FastAPI(title="流程脚手架工作流 API", version="1.0.0")
 
 class WorkflowRequest(BaseModel):
     requirement: str
+    skill: Optional[str] = None
     max_attempts: Optional[int] = 3
 
 
@@ -31,7 +32,7 @@ class WorkflowResponse(BaseModel):
 async def run_workflow_api(request: WorkflowRequest):
     """运行工作流：传入需求，返回生成结果和校验状态"""
     try:
-        result = run_workflow(request.requirement, request.max_attempts)
+        result = run_workflow(request.requirement, skill=request.skill, max_attempts=request.max_attempts)
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

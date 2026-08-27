@@ -105,6 +105,24 @@ CHECKLIST: List[CheckItem] = [
 
     # ===== 路径规范 =====
     {"id": "PATH_001", "category": "路径规范", "description": "流程根目录建在当前电脑桌面，用os.path.expanduser识别，不写死绝对路径", "method": "both", "severity": "hard"},
+
+    # ===== 网页JS逆向抓取技能 =====
+    {"id": "WEB_001", "category": "网页JS逆向", "description": "必须通过JS逆向/接口直连取数，禁止模拟人工操作（browser-agent点击/UI自动化）", "method": "ai", "severity": "hard"},
+    {"id": "WEB_002", "category": "网页JS逆向", "description": "token通过影刀JS或CDP自动读取，禁止要求用户手动从Console复制", "method": "ai", "severity": "hard"},
+    {"id": "WEB_003", "category": "网页JS逆向", "description": "输出result只传二维列表/字典，不附加无关内容", "method": "both", "severity": "hard"},
+    {"id": "WEB_004", "category": "网页JS逆向", "description": "日期统一YYYY-MM-DD格式，提供开始时间+结束时间两个变量，接口紧凑格式由脚本内部转换", "method": "both", "severity": "hard"},
+    {"id": "WEB_005", "category": "网页JS逆向", "description": "脚本顶部必须设可配置变量区，一行式精简备注，禁止长注释块", "method": "both", "severity": "hard"},
+    {"id": "WEB_006", "category": "网页JS逆向", "description": "脚本分三层：配置区、通用模块（CDP/请求/分页/清洗）、业务函数", "method": "ai", "severity": "hard"},
+    {"id": "WEB_007", "category": "网页JS逆向", "description": "Chrome路径留空时自动探测（注册表→常见路径），禁止写死单一路径", "method": "both", "severity": "hard"},
+    {"id": "WEB_008", "category": "网页JS逆向", "description": "交付脚本必须同时输出请求结构（URL+method+参数），stdout的JSON带request字段", "method": "both", "severity": "hard"},
+    {"id": "WEB_009", "category": "网页JS逆向", "description": "使用独立user-data-dir调试实例+CDP，禁止复制/重命名默认profile保留登录态", "method": "ai", "severity": "hard"},
+    {"id": "WEB_010", "category": "网页JS逆向", "description": "分组/筛选参数必须实测可选值后固化，禁止靠猜", "method": "ai", "severity": "hard"},
+    {"id": "WEB_011", "category": "网页JS逆向", "description": "依赖自动安装，兼容PEP 668和旧版pip", "method": "both", "severity": "hard"},
+    {"id": "WEB_012", "category": "网页JS逆向", "description": "分页拉取取全量，禁止只取第一页", "method": "both", "severity": "hard"},
+    {"id": "WEB_013", "category": "网页JS逆向", "description": "业务失败码（如999998）视为token失效，自动清缓存重取并重试一次", "method": "both", "severity": "hard"},
+    {"id": "WEB_014", "category": "网页JS逆向", "description": "数据清洗：HTML标签剥离、时间戳格式化、嵌套对象文本提取", "method": "both", "severity": "hard"},
+    {"id": "WEB_015", "category": "网页JS逆向", "description": "多分组结果合并必须extend展平后去重，禁止append嵌套列表", "method": "ai", "severity": "hard"},
+    {"id": "WEB_016", "category": "网页JS逆向", "description": "执行过程发现问题必须同步更新技能文档，禁止只留在对话上下文", "method": "ai", "severity": "hard"},
 ]
 
 
