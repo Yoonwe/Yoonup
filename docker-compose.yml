@@ -1,14 +1,11 @@
 version: '3.8'
 
 services:
-  workflow-engine:
+  yoonup-mcp:
     build: .
-    container_name: workflow-engine
+    container_name: yoonup-mcp
     ports:
       - "8000:8000"
-    env_file:
-      - .env
     volumes:
       - ./skills:/app/skills
-      - ./output:/app/output
     restart: unless-stopped

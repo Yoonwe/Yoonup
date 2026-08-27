@@ -467,3 +467,108 @@ def report_run_record(root_dir: str, project_name: str) -> dict:
 
 **未通过验证的流程不得交付，修改后重新验证，直到正常运行结束为止。**
 
+## 校验清单
+
+> 执行完成的流程代码/项目必须按本节逐项核对，全部通过方可交付。行格式：`- [ID] 检查方式 检查内容`，检查方式为 auto（程序自动化检查）/ ai（AI判断）/ both（程序检查+AI复核）。
+> 本节能被 validator.py 自动解析并驱动 check_result 末端整合校验；新增/修改检查项时保持格式不变，并在执行中同步更新技能文档。
+
+### 目录结构
+- [DIR_001] auto 必须包含主流程.py作为入口文件
+- [DIR_002] auto 子流程命名为流程{字母}_{数据源-用途}.py格式
+- [DIR_003] auto 必须包含通知.py飞书通知模块
+- [DIR_004] auto 必须包含运行记录.py模块
+- [DIR_005] auto 必须包含临时/目录用于中间文件
+- [DIR_006] auto 必须包含logs/目录用于日志
+- [DIR_007] auto 必须包含run.bat手动运行脚本
+
+### 命名规范
+- [NAME_001] both 变量名一律使用中文命名，禁止英文变量名
+- [NAME_002] both 变量声明必须带类型注解（变量名: 类型 = 初始值）
+- [NAME_003] ai 每个函数定义后必须有中文注释/docstring
+- [NAME_004] ai 函数体内每一行都必须有中文注释（尤其循环与请求）
+
+### 调用规则
+- [CALL_001] both 每个子流程必须暴露run(tmp_dir: str, prev_file: str = None) -> dict函数
+- [CALL_002] both 主流程必须支持--limit N参数（argparse）用于小样本验证
+- [CALL_003] ai 子流程间使用函数调用（import），禁止subprocess
+- [CALL_004] ai 主流程固定按A→B→C顺序调用子流程
+
+### 文件锁
+- [LOCK_001] both 主流程启动时必须通过.running.lock文件锁防并发
+- [LOCK_002] both 锁文件必须在项目根目录，严禁放临时/目录
+- [LOCK_003] both 锁机制采用PID存活检测，内容为{PID}|{时间}格式
+- [LOCK_004] ai 必须先acquire_lock()成功，再执行init_dirs()
+- [LOCK_005] both 释放锁必须带LOCK_HELD持有标志，防止误删并发实例的锁
+- [LOCK_006] both LOCK_TIMEOUT_HOURS必须与计划任务ExecutionTimeLimit一致（默认4小时）
+
+### 日志规则
+- [LOG_001] both 一次运行固定写入同一个日志文件（单文件，禁止每次新建）
+- [LOG_002] ai 日志格式：[时间] 流程X_用途 - 成功/失败 - 详情
+- [LOG_003] both 每个子流程成功行必须体现处理条数（成功 - N条）
+- [LOG_004] both 主流程结束必须输出条数汇总（流程A N条 / 流程B N条 / 合计N条）
+- [LOG_005] both 最多保留10个日志文件，超出删除最早的（启动时清理保留9个旧日志）
+
+### 终端进度
+- [PROG_001] both 抓取/API批量调用/写入时必须用\r+\033[K同行动态刷新进度
+- [PROG_002] ai 多表/多数据源必须分别打印获取数量，禁止只打印汇总
+- [PROG_003] ai 进度行仅输出终端，禁止写入日志
+- [PROG_004] auto 禁止使用tqdm等第三方进度库，保持零依赖
+
+### 错误处理
+- [ERR_001] ai 任一子流程失败立即停止主流程
+- [ERR_002] both 失败后调用通知.py的notify_groups()通知到群聊
+
+### 飞书通知
+- [FEISHU_001] both 通知.py必须包含规范中的APP_ID和APP_SECRET凭证
+- [FEISHU_002] both 失败通知群名关键词包含万威,黄俊文,肖晓雯
+- [FEISHU_003] both 成功通知使用reply_message回复指定message_id
+- [FEISHU_004] both reply_message请求体必须包含msg_type: text字段
+- [FEISHU_005] both 所有通知函数必须返回dict，调用方必须打印结果，严禁try/except: pass
+- [FEISHU_006] ai 成功通知模板：{文件夹名}-{时间}:完成；失败：{文件夹名}-{时间}:{错误}
+
+### 运行记录
+- [RECORD_001] both 运行记录.py必须包含APP_TOKEN和TABLE_ID凭证
+- [RECORD_002] both 每次运行结束必须调用report_run_record写入记录
+- [RECORD_003] ai 写入前查询今日同应用成功记录，命中则PUT覆盖，无则POST新建
+- [RECORD_004] both 应用名称必须动态取os.path.basename(ROOT_DIR)，禁止硬编码
+- [RECORD_005] both 必须校验飞书API返回的code字段，code!=0返回失败
+
+### Token与重试
+- [TOKEN_001] both Token必须带缓存自动刷新，提前5分钟过期留buffer
+- [TOKEN_002] both 所有HTTP请求必须显式设置timeout参数
+- [TOKEN_003] both 所有外部API调用必须带重试逻辑（最多3次，遇RequestException重试）
+- [TOKEN_004] ai 批量写入3次重试仍失败则跳过该批，不得中断整个流程
+- [TOKEN_005] ai 慢接口（如快递100识别）禁止加重复重试，失败返回空值由下一轮补跑
+
+### 定时任务
+- [CRON_001] ai 必须自动搭建Windows计划任务，每小时执行一次
+- [CRON_002] ai Action必须为独立Python+带引号绝对路径+WorkingDirectory留空
+- [CRON_003] ai 触发器为DailyTrigger(2)+Repetition每小时重复，禁止IdleTrigger
+- [CRON_004] ai ExecutionTimeLimit=PT4H，MultipleInstances=IgnoreNew，StartWhenAvailable=True
+
+### run.bat规范
+- [BAT_001] auto run.bat必须用UTF-8 with BOM编码写入
+- [BAT_002] auto run.bat必须使用CRLF换行符
+- [BAT_003] both 必须固定引用独立Python绝对路径，禁止动态查找Marvis内置Python
+- [BAT_004] both 必须设置PYTHONDONTWRITEBYTECODE=1禁止生成__pycache__
+- [BAT_005] both 主流程.py头部必须加sys.dont_write_bytecode = True
+- [BAT_006] auto bat文件首行留空行避让BOM，从第二行开始写@echo off
+
+### 工具脚本规范
+- [TOOL_001] both 所有工具脚本禁止使用input()/raw_input()阻塞式交互
+- [TOOL_002] both 参数通过argparse或环境变量传入，失败/成功通过sys.exit(0/1)返回
+
+### 路径规范
+- [PATH_001] both 流程根目录建在当前电脑桌面，用os.path.expanduser识别，不写死绝对路径
+
+### 运行验证
+- [VERIFY_001] ai 空跑验证通过：骨架逻辑（日志/临时文件/编排/通知）语法正确、目录与文件读写正常
+- [VERIFY_002] ai 联调验证通过：API串联完整运行一次，数据量大时用--limit N小样本，终端输出"全部完成!"+汇总+成功通知+运行记录
+- [VERIFY_003] ai 失败路径验证通过：人为制造异常，确认失败即停+飞书失败通知到群
+- [VERIFY_004] ai 日志校验通过：一次运行仅1个日志文件、每步含"N 条"、末尾含汇总、旧日志清理正常
+- [VERIFY_005] ai 定时任务验证通过：手动触发LastTaskResult=0、MultipleInstances=IgnoreNew、不经cmd/run.bat中转
+- [VERIFY_006] ai 运行记录校验通过：连续运行两次，第二次为"覆盖更新成功"、应用名称=文件夹名
+- [VERIFY_007] ai 锁机制校验通过：并发拦截输出"检测到正在运行"、死锁自愈（不存在PID被强制清除）
+- [VERIFY_008] ai 长任务健壮性校验通过：Token缓存+提前刷新、批量重试3次失败跳批、慢接口不重复重试
+- [VERIFY_009] ai 独立Python校验通过：run.bat固定引用独立Python绝对路径，winget list确认已安装
+
