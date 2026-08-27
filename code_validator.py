@@ -17,10 +17,11 @@ class ValidationResult(TypedDict):
     failed_count: int
 
 
-def auto_validate(project_dir: str) -> ValidationResult:
-    """自动化检查生成的项目目录"""
+def auto_validate(project_dir: str, skill_id: str = None) -> ValidationResult:
+    """自动化检查生成的项目目录，可按技能过滤校验规则"""
     passed: List[str] = []
     failed: List[Dict[str, str]] = []
+    auto_items = get_auto_check_items(skill_id)
 
     files = os.listdir(project_dir) if os.path.exists(project_dir) else []
     file_contents: Dict[str, str] = {}
@@ -324,7 +325,7 @@ def auto_validate(project_dir: str) -> ValidationResult:
         "all_passed": len(failed) == 0,
         "passed_items": passed,
         "failed_items": failed,
-        "total_count": len(passed) + len(failed),
+        "total_count": len(auto_items),
         "passed_count": len(passed),
         "failed_count": len(failed)
     }

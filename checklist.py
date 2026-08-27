@@ -4,6 +4,7 @@
 """
 import os
 import re
+import json
 from typing import TypedDict, List, Dict, Any
 
 
@@ -13,6 +14,31 @@ class CheckItem(TypedDict):
     description: str
     method: str  # "auto" = 自动化检查, "ai" = AI判断, "both" = 两者结合
     severity: str  # "hard" = 硬性规则, "soft" = 建议
+
+
+# 技能配置
+SKILLS_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "skills.json")
+
+
+def load_skills_config() -> Dict:
+    """加载技能配置"""
+    with open(SKILLS_CONFIG_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def get_skill_by_id(skill_id: str) -> Dict:
+    """按ID获取技能配置"""
+    config = load_skills_config()
+    for s in config["skills"]:
+        if s["id"] == skill_id:
+            return s
+    return None
+
+
+def list_skill_ids() -> List[str]:
+    """列出所有技能ID"""
+    config = load_skills_config()
+    return [s["id"] for s in config["skills"]]
 
 
 # 从《流程脚手架规范》抽取的校验清单
@@ -133,21 +159,34 @@ def get_checklist_by_category(category: str = None) -> List[CheckItem]:
     return CHECKLIST
 
 
-def get_auto_check_items() -> List[CheckItem]:
-    """获取可自动化检查的条目"""
-    return [c for c in CHECKLIST if c["method"] in ("auto", "both")]
+def get_checklist_by_skill(skill_id: str) -> List[CheckItem]:
+    """按技能ID获取校验清单（只返回该技能对应的校验规则）"""
+    skill = get_skill_by_id(skill_id)
+    if not skill:
+        return []
+    categories = skill.get("check_categories", [])
+    return [c for c in CHECKLIST if c["category"] in categories]
 
 
-def get_ai_check_items() -> List[CheckItem]:
-    """获取需要AI判断的条目"""
-    return [c for c in CHECKLIST if c["method"] in ("ai", "both")]
+def get_auto_check_items(skill_id: str = None) -> List[CheckItem]:
+    """获取可自动化检查的条目，可按技能过滤"""
+    items = get_checklist_by_skill(skill_id) if skill_id else CHECKLIST
+    return [c for c in items if c["method"] in ("auto", "both")]
 
 
-def format_checklist_for_ai() -> str:
-    """将校验清单格式化为AI可读的文本"""
-    lines = ["# 流程脚手架规范 - 校验清单\n"]
+def get_ai_check_items(skill_id: str = None) -> List[CheckItem]:
+    """获取需要AI判断的条目，可按技能过滤"""
+    items = get_checklist_by_skill(skill_id) if skill_id else CHECKLIST
+    return [c for c in items if c["method"] in ("ai", "both")]
+
+
+def format_checklist_for_ai(skill_id: str = None) -> str:
+    """将校验清单格式化为AI可读的文本，可按技能过滤"""
+    items = get_checklist_by_skill(skill_id) if skill_id else CHECKLIST
+    skill_name = get_skill_by_id(skill_id)["name"] if skill_id else "全部技能"
+    lines = [f"# {skill_name} - 校验清单\n"]
     current_category = None
-    for item in CHECKLIST:
+    for item in items:
         if item["category"] != current_category:
             current_category = item["category"]
             lines.append(f"\n## {current_category}\n")

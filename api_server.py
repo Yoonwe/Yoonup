@@ -6,15 +6,15 @@ import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-
 from main import run_workflow
+from checklist import load_skills_config
 
 app = FastAPI(title="流程脚手架工作流 API", version="1.0.0")
 
 
 class WorkflowRequest(BaseModel):
     requirement: str
-    skill: Optional[str] = None
+    skill_id: Optional[str] = None
     max_attempts: Optional[int] = 3
 
 
@@ -30,10 +30,12 @@ class WorkflowResponse(BaseModel):
 
 @app.post("/run", response_model=WorkflowResponse)
 async def run_workflow_api(request: WorkflowRequest):
-    """运行工作流：传入需求，返回生成结果和校验状态"""
+    """运行工作流：传入需求和技能ID，返回生成结果和校验状态"""
     try:
-        result = run_workflow(request.requirement, skill=request.skill, max_attempts=request.max_attempts)
+        result = run_workflow(request.requirement, skill_id=request.skill_id, max_attempts=request.max_attempts)
         return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -46,10 +48,9 @@ async def health():
 
 @app.get("/skills")
 async def list_skills():
-    """列出已加载的技能文档"""
-    skills_dir = os.path.join(os.path.dirname(__file__), "skills")
-    files = [f for f in os.listdir(skills_dir) if f.endswith('.md')]
-    return {"skills": files}
+    """列出所有可用技能（ID和名称）"""
+    config = load_skills_config()
+    return {"skills": [{"id": s["id"], "name": s["name"], "description": s["description"]} for s in config["skills"]]}
 
 
 if __name__ == "__main__":
