@@ -15,10 +15,10 @@
 
 | 技能ID | 名称 | 校验规则数 | 适用场景 |
 |--------|------|-----------|---------|
-| `scaffold` | 流程脚手架规范 | 61条 | 多步骤流程项目：飞书表格读写、API调用、通知、定时任务 |
-| `web-extractor` | 网页JS逆向直连数据抓取 | 16条 | 网页后台数据抓取：JS逆向、接口直连、CDP调试 |
+| `python-app` | python应用规范技能 | 61条 | 多步骤流程项目：飞书表格读写、API调用、通知、定时任务 |
+| `web-js-app` | web-js应用实施技能 | 16条 | 网页后台数据抓取：JS逆向、接口直连、CDP调试 |
 
-不传技能ID时自动识别：含"网页/JS逆向/CDP/接口直连/浏览器"等关键词用 `web-extractor`，其余默认 `scaffold`。
+不传技能ID时自动识别：含"网页/JS逆向/CDP/接口直连/浏览器"等关键词用 `web-js-app`，其余默认 `python-app`。
 
 ## 快速开始
 
@@ -42,7 +42,7 @@ cp .env.example .env
 python main.py "抓取飞书表格订单数据，查询快递100物流状态，回填飞书"
 
 # 指定技能
-python main.py "通过JS逆向获取电商后台订单数据" --skill-id web-extractor
+python main.py "通过JS逆向获取电商后台订单数据" --skill-id web-js-app
 
 # 查看可用技能
 python main.py --list-skills
@@ -65,7 +65,7 @@ curl -X POST http://localhost:8000/run \
 # 指定技能
 curl -X POST http://localhost:8000/run \
   -H "Content-Type: application/json" \
-  -d '{"requirement": "JS逆向抓取网页后台数据", "skill_id": "web-extractor"}'
+  -d '{"requirement": "JS逆向抓取网页后台数据", "skill_id": "web-js-app"}'
 
 # 查看技能列表
 curl http://localhost:8000/skills
@@ -97,8 +97,8 @@ workflow-engine/
 ├── mcp_server.py        # MCP Server接口
 ├── skills.json          # 技能注册表（ID、名称、MD文件、校验类别）
 ├── skills/              # 技能规范文档
-│   ├── 流程脚手架规范.md
-│   └── web-js-extractor.md
+│   ├── python应用规范.md
+│   └── web-js应用实施.md
 ├── output/              # 生成的项目输出目录
 ├── AGENTS.md            # AI操作规范（修改同步GitHub等）
 ├── requirements.txt

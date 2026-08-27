@@ -81,9 +81,9 @@ def detect_skill(requirement: str) -> str:
     # web-extractor 关键词：网页抓取、JS逆向、浏览器、CDP、接口直连
     web_keywords = ["网页", "js逆向", "js 逆向", "接口直连", "cdp", "浏览器", "后台数据", "token", "逆向", "网页后台", "抓包", "加密参数", "签名"]
     if any(kw in req for kw in web_keywords):
-        return "web-extractor"
-    # 默认 scaffold（流程、飞书、表格、订单、物流、通知、定时等）
-    return "scaffold"
+        return "web-js-app"
+    # 默认 python-app（流程、飞书、表格、订单、物流、通知、定时等）
+    return "python-app"
 
 
 # ===== 状态定义 =====
@@ -453,7 +453,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="流程脚手架工作流")
     parser.add_argument("requirement", nargs="?", help="业务需求描述")
-    parser.add_argument("--skill-id", type=str, default=None, help="指定技能ID（如 scaffold 或 web-extractor），不传则加载全部技能")
+    parser.add_argument("--skill-id", type=str, default=None, help="指定技能ID（如 python-app 或 web-js-app），不传则自动识别")
     parser.add_argument("--max-attempts", type=int, default=3, help="最大修复尝试次数")
     parser.add_argument("--list-skills", action="store_true", help="列出所有可用技能")
     args = parser.parse_args()
