@@ -75,6 +75,17 @@ def list_skills() -> list:
     return [f"{s['id']} - {s['name']}" for s in config["skills"]]
 
 
+def detect_skill(requirement: str) -> str:
+    """根据需求关键词自动识别技能ID，匹配不到返回空字符串"""
+    req = requirement.lower()
+    # web-extractor 关键词：网页抓取、JS逆向、浏览器、CDP、接口直连
+    web_keywords = ["网页", "js逆向", "js 逆向", "接口直连", "cdp", "浏览器", "后台数据", "token", "逆向", "网页后台", "抓包", "加密参数", "签名"]
+    if any(kw in req for kw in web_keywords):
+        return "web-extractor"
+    # 默认 scaffold（流程、飞书、表格、订单、物流、通知、定时等）
+    return "scaffold"
+
+
 # ===== 状态定义 =====
 class WorkflowState(TypedDict):
     requirement: str                    # 用户需求
@@ -395,8 +406,12 @@ workflow_app = build_workflow()
 
 def run_workflow(requirement: str, skill_id: str = None, max_attempts: int = MAX_ATTEMPTS) -> Dict[str, Any]:
     """运行工作流的入口函数"""
+    # 未指定skill_id时自动识别
+    if not skill_id:
+        skill_id = detect_skill(requirement)
+        logger.info(f"[自动识别] 技能: {skill_id}")
     # 校验skill_id
-    if skill_id and get_skill_by_id(skill_id) is None:
+    if get_skill_by_id(skill_id) is None:
         raise ValueError(f"技能ID不存在: {skill_id}，可用技能: {list_skill_ids()}")
 
     logger.info(f"=" * 50)
