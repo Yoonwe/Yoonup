@@ -8,7 +8,7 @@
 | 文件 | 角色 |
 |------|------|
 | `AGENTS.md` | 工作流流程约定（本文档，所有 AI 产品必须遵守） |
-| `skills/*.md` | 技能规范库：普通 MD 操作指南，记录具体操作事项；**每份文档末尾含「校验清单」章节** |
+| `skills/*/SKILL.md` | 技能规范库：一个技能一个目录，SKILL.md 为普通 MD 操作指南（YAML frontmatter + 正文）；**每份文档末尾含「校验清单」章节** |
 | `skills.json` | 技能注册表：id / name / file / description / check_section |
 | `validator.py` | 校验器：解析 MD 校验清单、自动化检查、执行计划规划（不依赖 LLM） |
 | `mcp_server.py` | 远程 MCP Server：暴露 list_skills / get_skill_spec / plan_requirement / check_result 四个工具 |
@@ -26,8 +26,8 @@
 
 ### 第 0 步：识别技能
 判断需求属于哪个技能，不确定时调用 `list_skills` 查看：
-- `python-app`：Python 流程项目（多子流程编排、飞书通知、定时任务、运行记录等）
-- `web-js-app`：网页后台数据抓取（JS 逆向 / 接口直连，输出影刀可用二维列表）
+- `python-app-standard`：Python 流程项目（多子流程编排、飞书通知、定时任务、运行记录等）
+- `web-js-app-implementation`：网页后台数据抓取（JS 逆向 / 接口直连，输出影刀可用二维列表）
 
 ### 第 1 步：读取技能规范（禁止跳过）
 调用 `get_skill_spec(skill_id)` 获取技能规范全文与校验清单章节。
@@ -59,7 +59,7 @@
 
 ## 文档维护约定
 
-- 执行过程中发现的问题 / 踩坑 / 新接口经验，**必须同步更新 `skills/` 下对应 MD**，禁止只留在对话上下文。
+- 执行过程中发现的问题 / 踩坑 / 新接口经验，**必须同步更新 `skills/<skill-name>/SKILL.md`**，禁止只留在对话上下文。
 - 本仓库以 GitHub 为版本管理与同步源，改动后提交并推送保持多机一致。
 
 ## 部署与接入
@@ -78,8 +78,10 @@ Yoonup/
 ├── mcp_server.py          # 远程 MCP Server（4 工具）
 ├── validator.py           # 校验器（解析校验清单 + 自动化检查 + 计划规划）
 ├── skills/
-│   ├── python应用规范.md   # 技能1：Python 流程脚手架规范 + 校验清单
-│   └── web-js应用实施.md   # 技能2：网页 JS 逆向抓取规范 + 校验清单
+│   ├── python-app-standard/
+│   │   └── SKILL.md       # 技能1：Python 流程脚手架规范 + 校验清单
+│   └── web-js-app-implementation/
+│       └── SKILL.md       # 技能2：网页 JS 逆向抓取规范 + 校验清单
 ├── skills.json            # 技能注册表
 ├── requirements.txt
 ├── Dockerfile

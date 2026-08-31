@@ -48,7 +48,7 @@ def get_skill_spec(skill_id: str, include_checklist: bool = True) -> Dict[str, A
     """
     获取指定技能的规范全文与校验清单章节。
     参数:
-        skill_id: 技能ID（python-app / web-js-app，可先调 list_skills 查看）
+        skill_id: 技能ID（python-app-standard / web-js-app-implementation，可先调 list_skills 查看）
         include_checklist: 是否同时返回校验清单（默认 true）
     返回:
         skill_id / skill_name / description / spec（MD全文） / checklist（结构化） / checklist_text（AI核对文本）

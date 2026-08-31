@@ -2,7 +2,7 @@
 
 让**任何智能体 / vibe-coding 产品**都能按「工作流文件夹规范」稳定执行任务、调用指定技能，并在末端做整合校验的**三件套**仓库：
 
-> **工作流约定（AGENTS.md） + 技能规范库（skills/*.md） + 远程 MCP（mcp_server.py）**
+> **工作流约定（AGENTS.md） + 技能规范库（skills/*/SKILL.md） + 远程 MCP（mcp_server.py）**
 
 ## 解决什么问题
 
@@ -12,7 +12,7 @@
 
 ## 工作流（接入方 AI 必须遵守）
 
-1. **识别技能**：`list_skills` 查看可用技能（python-app / web-js-app）
+1. **识别技能**：`list_skills` 查看可用技能（python-app-standard / web-js-app-implementation）
 2. **读取规范**：`get_skill_spec` 获取技能 MD 全文 + 校验清单（禁止跳过）
 3. **拆分需求**：`plan_requirement` 获取计划骨架 → **向用户提问确认执行顺序** → 按序执行，实时反馈进度
 4. **末端校验**：`check_result` 对执行结果按校验清单逐项核对，未通过修复重跑，**通过才交付**
@@ -53,14 +53,14 @@ MCP 服务地址填入：`http://<服务器IP>:8000/mcp`（streamable-http）
 
 ## 技能规范库
 
-技能是**普通 MD 操作指南**，放在 `skills/`，每份文档末尾含 `## 校验清单` 章节：
+技能是**普通 MD 操作指南**，放在 `skills/<skill-name>/SKILL.md`（agentskills.io 标准格式：YAML frontmatter + 正文），每份文档末尾含 `## 校验清单` 章节：
 
-- **python应用规范.md**：Python 流程项目脚手架（目录结构、命名规范、文件锁、日志、飞书通知、运行记录、Token 重试、定时任务、run.bat 规范、运行验证 9 项）
-- **web-js应用实施.md**：网页 JS 逆向 / 接口直连数据抓取（token 自动化、CDP、分页、清洗、抖店登录与选店规范、滑块应对）
+- **skills/python-app-standard/SKILL.md**：Python 流程项目脚手架（目录结构、命名规范、文件锁、日志、飞书通知、运行记录、Token 重试、定时任务、run.bat 规范、运行验证 9 项）
+- **skills/web-js-app-implementation/SKILL.md**：网页 JS 逆向 / 接口直连数据抓取（token 自动化、CDP、分页、清洗、抖店登录与选店规范、滑块应对）
 
 ### 扩展技能 / 新增校验项
 
-1. 在 `skills/` 新增或修改 MD（末尾必须有 `## 校验清单` 章节）；
+1. 在 `skills/` 下新建技能目录，编写 `SKILL.md`（第一行 `---` 开头，frontmatter 含 `name` / `description` / `metadata`，正文末尾必须有 `## 校验清单` 章节）；
 2. 在 `skills.json` 注册（id / name / file / description / check_section / check_categories）；
 3. 校验清单条目格式固定：`- [ID] auto|ai|both 检查内容`；
 4. 若新增 ID 想在 validator.py 里自动检查，按对应类别补检查器；否则自动归入 AI 核对清单（无需改代码）。
@@ -75,8 +75,10 @@ Yoonup/
 ├── mcp_server.py          # 远程 MCP Server（4 工具）
 ├── validator.py           # 校验器：解析校验清单 + 自动化检查 + 计划规划
 ├── skills/
-│   ├── python应用规范.md
-│   └── web-js应用实施.md
+│   ├── python-app-standard/
+│   │   └── SKILL.md       # 技能1：Python 流程脚手架规范 + 校验清单
+│   └── web-js-app-implementation/
+│       └── SKILL.md       # 技能2：网页 JS 逆向抓取规范 + 校验清单
 ├── skills.json            # 技能注册表
 ├── requirements.txt
 ├── Dockerfile

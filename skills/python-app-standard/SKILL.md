@@ -1,21 +1,10 @@
 ---
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 57fb548516b32a13ed9be7c0410d64ef_b9a4ad7b8d6c11f1b82d525400287e28
-    ReservedCode1: 3Koz3qyJM3XSD7Wj4js038Gkf7kmO/7z0ZvDY8YB5U+2mqAIweWKcdjGTj2DoZjYKIATd5BNYhPs43YHFYiUyc8QKnurihLoY+YTFI6gM/fj6wRE13NtYYiny9CZLXfoMb1Xyeb62JI9OdNHmX+JhdW59Y4GU/td0GUBxWUzS62GwOQg9MvnlhynOIs=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 57fb548516b32a13ed9be7c0410d64ef_b9a4ad7b8d6c11f1b82d525400287e28
-    ReservedCode2: 3Koz3qyJM3XSD7Wj4js038Gkf7kmO/7z0ZvDY8YB5U+2mqAIweWKcdjGTj2DoZjYKIATd5BNYhPs43YHFYiUyc8QKnurihLoY+YTFI6gM/fj6wRE13NtYYiny9CZLXfoMb1Xyeb62JI9OdNHmX+JhdW59Y4GU/td0GUBxWUzS62GwOQg9MvnlhynOIs=
+name: python-app-standard
+description: Python流程项目脚手架规范。当用户要求开发/修改Python流程应用（多子流程编排、飞书通知、定时任务、运行记录、文件锁、日志、run.bat等自动化项目）时使用，输出符合脚手架规范的完整可运行代码。
+metadata:
+  check_section: 校验清单
+  check_categories: ["目录结构", "命名规范", "调用规则", "文件锁", "日志规则", "终端进度", "错误处理", "飞书通知", "运行记录", "Token与重试", "定时任务", "run.bat规范", "工具脚本规范", "路径规范", "运行验证"]
 ---
-
-
-
-
-
-
-
-
 
 # 流程脚手架规范 V1.0
 

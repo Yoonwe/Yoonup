@@ -44,20 +44,26 @@ def get_skill_by_id(skill_id: str) -> Optional[Dict[str, Any]]:
 
 
 def read_skill_md(skill: Dict[str, Any]) -> str:
-    """读取技能规范 MD 全文"""
+    """读取技能规范 MD 全文（SKILL.md，自动剥离 YAML frontmatter 返回正文）"""
     fpath = os.path.join(SKILLS_DIR, skill["file"])
     with open(fpath, "r", encoding="utf-8") as f:
-        return f.read()
+        content = f.read()
+    # agentskills.io 标准：skills/<skill-name>/SKILL.md，以 --- 开头为 YAML frontmatter，剥离后为正文
+    if content.startswith("---"):
+        parts = content.split("---", 2)
+        if len(parts) >= 3:
+            return parts[2].lstrip("\n")
+    return content
 
 
 def detect_skill(requirement: str) -> str:
-    """根据需求关键词自动识别技能ID（匹配不到默认 python-app）"""
+    """根据需求关键词自动识别技能ID（匹配不到默认 python-app-standard）"""
     req = requirement.lower()
     web_keywords = ["网页", "js逆向", "js 逆向", "接口直连", "cdp", "浏览器", "后台数据",
                     "token", "逆向", "网页后台", "抓包", "加密参数", "签名"]
     if any(kw in req for kw in web_keywords):
-        return "web-js-app"
-    return "python-app"
+        return "web-js-app-implementation"
+    return "python-app-standard"
 
 
 # ========== 校验清单解析（从 MD「校验清单」章节动态读取） ==========
@@ -521,7 +527,7 @@ def _check_path(ctx: Dict[str, Any], auto_ids: set) -> tuple:
 CHECKERS["路径规范"] = _check_path
 
 
-# ---- 网页JS逆向（web-js-app）----
+# ---- 网页JS逆向（web-js-app-implementation）----
 def _check_web(ctx: Dict[str, Any], auto_ids: set) -> tuple:
     passed, failed = [], []
     all_code = ctx["all_code"]
@@ -627,7 +633,7 @@ def plan_requirement(requirement: str, skill_id: Optional[str] = None) -> Dict[s
     if not skill:
         raise ValueError(f"技能ID不存在: {sid}")
 
-    if sid == "web-js-app":
+    if sid == "web-js-app-implementation":
         steps = [
             {"step": 1, "name": "逆向定位接口", "action": "打开目标页，Network 筛选 XHR/Fetch 定位数据接口；必要时从前端 chunk 提取接口路径与字段映射"},
             {"step": 2, "name": "还原请求", "action": "确认请求方法/URL/参数/必要请求头/分页参数/响应结构，本地直连验证与页面数据核对"},
@@ -642,7 +648,7 @@ def plan_requirement(requirement: str, skill_id: Optional[str] = None) -> Dict[s
             "token 来源：影刀传参 / CDP 自动读取 / 缓存复用",
             "交付物：脚本路径、运行验证结果",
         ]
-    else:  # python-app
+    else:  # python-app-standard
         steps = [
             {"step": 1, "name": "解析需求与拆分", "action": "读取技能规范，按业务逻辑和数据源/接口拆分子流程（流程A/B/C...），不反问规范已覆盖的细节"},
             {"step": 2, "name": "向用户确认执行顺序", "action": "展示拆分后的步骤清单与执行顺序，由用户拍板后开始执行"},
@@ -697,7 +703,7 @@ if __name__ == "__main__":
             req = sys.argv[2] if len(sys.argv) > 2 else "示例需求"
             print(json.dumps(plan_requirement(req), ensure_ascii=False, indent=2))
         elif arg == "spec":
-            sid = sys.argv[2] if len(sys.argv) > 2 else "python-app"
+            sid = sys.argv[2] if len(sys.argv) > 2 else "python-app-standard"
             data = get_skill_spec(sid)
             print(f"技能: {data['skill_id']} - {data['skill_name']}")
             print(f"规范长度: {len(data['spec'])} 字符")

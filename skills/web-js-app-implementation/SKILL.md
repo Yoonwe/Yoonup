@@ -1,12 +1,9 @@
 ---
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 57fb548516b32a13ed9be7c0410d64ef_e96a50609f6711f1a54f525400f8a581
-    ReservedCode1: akNMj5pEw94uepnZclCtUAKYmUCfcRHH4ighzwXLgEucF3XhrH+ugJ8tjzWVKGLfHY9rGebK+8EIoMhM4Y/zThFRXSalMDBnD5TYY1BXu5V3kcOoYbHrcSWO23hMbyNQNGueV7K/RxVxSyI2VhUfOnOqTY9PRMiS9qc4sEVJTjyxbYoTf+yAuAv6xkk=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 57fb548516b32a13ed9be7c0410d64ef_e96a50609f6711f1a54f525400f8a581
-    ReservedCode2: akNMj5pEw94uepnZclCtUAKYmUCfcRHH4ighzwXLgEucF3XhrH+ugJ8tjzWVKGLfHY9rGebK+8EIoMhM4Y/zThFRXSalMDBnD5TYY1BXu5V3kcOoYbHrcSWO23hMbyNQNGueV7K/RxVxSyI2VhUfOnOqTY9PRMiS9qc4sEVJTjyxbYoTf+yAuAv6xkk=
+name: web-js-app-implementation
+description: 网页后台数据抓取技能：通过JS逆向与接口直连完成取数并输出影刀可用二维列表。当用户要求开发/修改网页后台（客服系统、电商平台、商家后台等）的数据抓取脚本时使用，含token自动化、CDP调试实例、分页拉取、数据清洗与校验清单。
+metadata:
+  check_section: 校验清单
+  check_categories: ["网页JS逆向"]
 ---
 
 # 网页 JS 逆向直连数据抓取技能

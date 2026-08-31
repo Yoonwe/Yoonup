@@ -1,17 +1,17 @@
 {
   "skills": [
     {
-      "id": "python-app",
+      "id": "python-app-standard",
       "name": "python应用规范技能",
-      "file": "python应用规范.md",
+      "file": "python-app-standard/SKILL.md",
       "description": "Python流程项目脚手架，包含目录结构、命名规范、文件锁、日志、飞书通知、定时任务等",
       "check_section": "校验清单",
       "check_categories": ["目录结构", "命名规范", "调用规则", "文件锁", "日志规则", "终端进度", "错误处理", "飞书通知", "运行记录", "Token与重试", "定时任务", "run.bat规范", "工具脚本规范", "路径规范", "运行验证"]
     },
     {
-      "id": "web-js-app",
+      "id": "web-js-app-implementation",
       "name": "web-js应用实施技能",
-      "file": "web-js应用实施.md",
+      "file": "web-js-app-implementation/SKILL.md",
       "description": "通过JS逆向与接口直连完成网页后台数据抓取，输出影刀可用的二维列表",
       "check_section": "校验清单",
       "check_categories": ["网页JS逆向"]
