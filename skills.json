@@ -6,7 +6,23 @@
       "file": "python-app-standard/SKILL.md",
       "description": "Python流程项目脚手架，包含目录结构、命名规范、文件锁、日志、飞书通知、定时任务等",
       "check_section": "校验清单",
-      "check_categories": ["目录结构", "命名规范", "调用规则", "文件锁", "日志规则", "终端进度", "错误处理", "飞书通知", "运行记录", "Token与重试", "定时任务", "run.bat规范", "工具脚本规范", "路径规范", "运行验证"]
+      "check_categories": [
+        "目录结构",
+        "命名规范",
+        "调用规则",
+        "文件锁",
+        "日志规则",
+        "终端进度",
+        "错误处理",
+        "飞书通知",
+        "运行记录",
+        "Token与重试",
+        "定时任务",
+        "run.bat规范",
+        "工具脚本规范",
+        "路径规范",
+        "运行验证"
+      ]
     },
     {
       "id": "web-js-app-implementation",
@@ -14,7 +30,9 @@
       "file": "web-js-app-implementation/SKILL.md",
       "description": "通过JS逆向与接口直连完成网页后台数据抓取，输出影刀可用的二维列表",
       "check_section": "校验清单",
-      "check_categories": ["网页JS逆向"]
+      "check_categories": [
+        "网页JS逆向"
+      ]
     },
     {
       "id": "yoonup-workflow",
@@ -22,7 +40,15 @@
       "file": "yoonup-workflow/SKILL.md",
       "description": "按Yoonup工作流文件夹规范稳定执行任务：识别技能→读取规范→需求拆分提问→按序执行→末端校验，含仓库同步约定",
       "check_section": "校验清单",
-      "check_categories": ["技能识别", "规范读取", "需求拆分", "执行反馈", "末端校验", "仓库同步"]
+      "check_categories": [
+        "技能自检",
+        "技能识别",
+        "规范读取",
+        "需求拆分",
+        "执行反馈",
+        "末端校验",
+        "仓库同步"
+      ]
     }
   ]
 }

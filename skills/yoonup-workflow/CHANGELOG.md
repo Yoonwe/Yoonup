@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [2026-09-03] 技能自检与自动更新机制
+
+### 新增
+- 新增「技能自检与自动更新机制」章节（SKILL.md + AGENTS.md 同步）：每次调用必须先自检，发现问题立即修复并推送
+- 自检内容 6 项：文件完整性/注册一致性/校验清单可解析/CHECKERS覆盖/本地GitHub同步/代码质量
+- 校验清单新增 YW00（技能自检，both），类别「技能自检」
+- validator.py 新增「技能自检」CHECKERS（YW00 auto 检查：skills.json/技能目录/SKILL.md 存在性）
+- skills.json check_categories 新增「技能自检」
+
+### 修复
+- 移除 validator.py 死代码 _make_checker、_bat_has
+
+
 ## [2026-09-03] 执行纪律 + 全量同步校对
 
 ### 新增

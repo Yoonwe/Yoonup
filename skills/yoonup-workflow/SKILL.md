@@ -45,6 +45,34 @@ description: 按 Yoonup「工作流文件夹规范」稳定执行任务：识别
 | Python 流程自动化项目（多子流程编排、飞书通知、定时任务、运行记录、文件锁、日志、run.bat） | python-app-standard | `references/python-app-standard.md` |
 | 网页后台数据抓取（JS 逆向/接口直连，输出影刀可用二维列表） | web-js-app-implementation | `references/web-js-app-implementation.md` |
 
+## 技能自检与自动更新机制（每次调用必须执行，禁止跳过）
+
+每次调用本技能时，**必须先执行技能自检**，确认技能本身完整、一致、可用。发现问题**立即修复并推送到 GitHub**，不需要用户要求。
+
+### 自检内容（逐项检查）
+
+1. **文件完整性**：`SKILL.md`、`references/` 下 3 份规范文件、`CHANGELOG.md`、`README.md`、`.gitignore` 全部存在
+2. **注册一致性**：`skills.json` 中注册的技能与 `skills/` 实际目录一致，字段完整（id/name/file/description/check_section/check_categories）
+3. **校验清单可解析**：`validator.py` 能正确解析所有技能的校验清单，ID 唯一，类别与 `check_categories` 一致
+4. **CHECKERS 覆盖**：所有 `auto`/`both` 条目的类别都有对应的检查器，无死代码
+5. **本地与 GitHub 同步**：本地 `.user_skills/yoonup-workflow/` 与 GitHub `skills/yoonup-workflow/` 7 组文件完全一致
+6. **代码质量**：`validator.py`、`mcp_server.py` 语法正确，无敏感信息泄露，无 BOM，无死代码
+
+### 发现问题后的处理流程
+
+1. **立即修复**：在本地修复发现的问题（技能文档、references、validator.py 等）
+2. **同步到 GitHub**：按「技能仓库与同步约定」的标准流程，将修复推送到 `Yoonwe/Yoonup`
+3. **重新自检**：修复后重新执行自检，直到全部通过
+4. **记录变更**：在 `CHANGELOG.md` 中记录本次修复内容
+5. **继续执行任务**：自检通过后，才进入正式工作流（第 0 步开始）
+
+### 禁止行为
+
+- **禁止**跳过技能自检直接执行任务
+- **禁止**发现技能问题后只修本地不推送到 GitHub
+- **禁止**等用户要求才检查或修复技能问题
+- **禁止**把"技能有问题"作为借口降低交付标准
+
 ## 工作流（必须按此流程执行）
 
 ### 第 0 步：识别技能
@@ -134,6 +162,9 @@ description: 按 Yoonup「工作流文件夹规范」稳定执行任务：识别
 
 > 执行完成后按本节逐项核对，全部通过方可交付。行格式：`- [ID] 检查方式 检查内容`，检查方式为 auto（程序自动化检查）/ ai（AI 判断）/ both（程序检查 + AI 复核）。
 > 本节能被 validator.py 自动解析并驱动 check_result 末端整合校验。
+
+### 技能自检
+- [YW00] both 每次调用已先执行技能自检（文件完整性/注册一致性/校验清单可解析/CHECKERS覆盖/本地GitHub同步/代码质量），发现问题已修复并推送
 
 ### 技能识别
 - [YW01] ai 已正确识别需求所属子技能（python-app-standard / web-js-app-implementation），不确定时已向用户确认

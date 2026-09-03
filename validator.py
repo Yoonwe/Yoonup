@@ -592,6 +592,37 @@ def _check_repo_sync(ctx: Dict[str, Any], auto_ids: set) -> tuple:
 CHECKERS["仓库同步"] = _check_repo_sync
 
 
+# ---- 技能自检（yoonup-workflow）----
+def _check_skill_self_audit(ctx: Dict[str, Any], auto_ids: set) -> tuple:
+    passed, failed = [], []
+    project_dir = ctx["project_dir"]
+
+    def _skills_json_exists() -> bool:
+        return os.path.exists(os.path.join(project_dir, "skills.json"))
+
+    def _skill_dir_exists() -> bool:
+        return os.path.isdir(os.path.join(project_dir, "skills", "yoonup-workflow"))
+
+    def _skill_md_exists() -> bool:
+        return os.path.exists(os.path.join(project_dir, "skills", "yoonup-workflow", "SKILL.md"))
+
+    checks = {
+        "YW00": (lambda: _skills_json_exists() and _skill_dir_exists() and _skill_md_exists(),
+                 "技能自检未通过：缺少 skills.json / skills/yoonup-workflow/ / SKILL.md"),
+    }
+    for cid, (fn, reason) in checks.items():
+        if cid not in auto_ids:
+            continue
+        if fn():
+            passed.append(cid)
+        else:
+            failed.append({"id": cid, "reason": reason})
+    return passed, failed
+
+
+CHECKERS["技能自检"] = _check_skill_self_audit
+
+
 # ========== 整合校验入口 ==========
 
 def check_result(project_dir: str, skill_id: Optional[str] = None,
