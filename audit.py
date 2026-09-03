@@ -343,8 +343,7 @@ def quality_check():
                 for alias in node.names:
                     imports.add(alias.asname or alias.name.split(".")[0])
             elif isinstance(node, ast.ImportFrom):
-                if node.module:
-                    imports.add(node.module.split(".")[0])
+                # from X import Y: 只把 Y 加入 imports，不把 X 加入（避免误报）
                 for alias in node.names:
                     imports.add(alias.asname or alias.name)
         used = set()
