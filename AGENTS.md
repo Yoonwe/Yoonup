@@ -134,6 +134,22 @@
 - 发现问题不修复不推送
 - 跳过边界测试
 
+## 校对维度清单（每次校对必须覆盖以下全部维度）
+
+### 第 1 轮：结构与一致性（10 项）
+最新提交、技能注册字段、校验清单解析、CHECKERS覆盖、本地GitHub文件一致、AGENTS↔references一致、references↔skills一致、Python语法、无BOM、dist zip一致
+
+### 第 2 轮：逻辑与边界（6 类用例）
+check_result边界、get_skill_checklist边界、detect_skill边界、plan_requirement边界、检查器正反用例、parse_checklist边界
+
+### 第 3 轮：安全与运维（7 项）
+敏感信息扫描、路径遍历、MCP启动、Docker配置、依赖检查、git状态、配置文件
+
+### 代码质量专项
+未使用import、类型注解、异常处理、调试代码、命名一致性、文档一致性、编码、路径处理
+
+发现问题立即修复推送，然后从第1轮重新开始，连续三轮零问题才算完成。
+
 ## 文档维护约定
 
 - 执行过程中发现的问题 / 踩坑 / 新接口经验，**必须同步更新 `skills/<skill-name>/SKILL.md`**，禁止只留在对话上下文。

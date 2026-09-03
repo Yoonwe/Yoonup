@@ -90,6 +90,58 @@ description: 按 Yoonup「工作流文件夹规范」稳定执行任务：识别
 - 发现问题不修复不推送，只在对话里说"已记录"
 - 跳过边界测试，只测正常输入
 
+### 校对维度清单（每次校对必须覆盖以下全部维度，禁止遗漏）
+
+用户要求校对时，必须按以下维度逐项检查，每项执行具体命令并贴出输出。**禁止只查其中一部分就说"全部通过"。**
+
+#### 第 1 轮：结构与一致性（10 项）
+1. 最新提交号（`git log --oneline -1`）
+2. 技能注册数与字段完整性（id/name/file/description/check_section/check_categories）
+3. 校验清单解析（3 个技能全部解析，统计类别数、条目数、ID 唯一性）
+4. CHECKERS 覆盖（所有 auto/both 类别的条目都有对应检查器）
+5. 本地与 GitHub 文件一致性（7 组文件 diff）
+6. AGENTS.md ↔ references/agents-convention.md 一致
+7. references ↔ skills 对应文件一致（python-app-standard、web-js-app-implementation）
+8. Python 语法（validator.py + mcp_server.py）
+9. 无 BOM（所有 .py/.md/.json/.yml 文件）
+10. dist 3 个 zip 内容与 skills 目录一致
+
+#### 第 2 轮：逻辑与边界（6 类用例）
+1. **check_result 边界**：传入文件路径（如 /etc/passwd）、不存在路径、空目录、正常目录、不传 skill_id
+2. **get_skill_checklist 边界**：不存在的技能 ID、空字符串、正常技能
+3. **detect_skill 边界**：空字符串、各技能关键词、模糊需求
+4. **plan_requirement 边界**：空需求、不存在的 skill_id、三个技能都有 steps 和 questions
+5. **检查器逻辑正反用例**：YW00（有/无 skills.json）、YW09（有/无 git remote）
+6. **parse_checklist 边界**：无校验清单章节、空章节、格式错误条目（缺 method）、正常条目
+
+#### 第 3 轮：安全与运维（7 项）
+1. 敏感信息扫描（工作区 + git 历史，搜 github_pat/ghp_/token 等）
+2. 路径遍历测试（_read_project 不会读取项目目录外的文件）
+3. MCP 服务启动测试（timeout 3 秒，确认 startup complete）
+4. Docker 配置（Dockerfile 基础镜像、docker-compose 端口映射）
+5. 依赖检查（mcp/fastapi 已安装，requirements.txt 完整）
+6. git 状态（无未推送提交、无未提交变更）
+7. 配置文件（.env.example、requirements.txt、.gitignore 都存在）
+
+#### 代码质量专项（发现问题即修复，不计入三轮）
+- 未使用的 import（ast 分析）
+- 类型注解覆盖率（参数注解、返回值注解）
+- 缺返回值注解的函数
+- 异常处理覆盖（open/listdir/subprocess.run 是否在 try 中）
+- 调试代码残留（print/pdb/breakpoint，排除 __main__ 块）
+- 函数命名一致性（私有函数以 _ 开头）
+- README 描述与实际功能一致
+- skills.json description 与 SKILL.md frontmatter 一致
+- check_section 字段与实际章节标题匹配
+- 文件读写指定 encoding
+- 路径处理用 os.path.join，不硬编码 /
+
+#### 校对完成标准
+- 上述全部维度逐项检查，每项有命令输出为证
+- 发现问题立即修复并推送，然后从第 1 轮重新开始
+- 连续三轮（每轮重新 clone）零问题，才算完成
+- 禁止用"全部通过"四个字代替具体证据
+
 ### 禁止行为
 
 - **禁止**跳过技能自检直接执行任务
