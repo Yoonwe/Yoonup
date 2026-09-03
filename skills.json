@@ -15,6 +15,14 @@
       "description": "通过JS逆向与接口直连完成网页后台数据抓取，输出影刀可用的二维列表",
       "check_section": "校验清单",
       "check_categories": ["网页JS逆向"]
+    },
+    {
+      "id": "yoonup-workflow",
+      "name": "Yoonup工作流执行技能",
+      "file": "yoonup-workflow/SKILL.md",
+      "description": "按Yoonup工作流文件夹规范稳定执行任务：识别技能→读取规范→需求拆分提问→按序执行→末端校验，含仓库同步约定",
+      "check_section": "校验清单",
+      "check_categories": ["技能识别", "规范读取", "需求拆分", "执行反馈", "末端校验", "仓库同步"]
     }
   ]
 }

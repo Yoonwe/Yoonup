@@ -12,7 +12,7 @@
 
 ## 工作流（接入方 AI 必须遵守）
 
-1. **识别技能**：`list_skills` 查看可用技能（python-app-standard / web-js-app-implementation）
+1. **识别技能**：`list_skills` 查看可用技能（yoonup-workflow / python-app-standard / web-js-app-implementation）
 2. **读取规范**：`get_skill_spec` 获取技能 MD 全文 + 校验清单（禁止跳过）
 3. **拆分需求**：`plan_requirement` 获取计划骨架 → **向用户提问确认执行顺序** → 按序执行，实时反馈进度
 4. **末端校验**：`check_result` 对执行结果按校验清单逐项核对，未通过修复重跑，**通过才交付**
@@ -55,6 +55,7 @@ MCP 服务地址填入：`http://<服务器IP>:8000/mcp`（streamable-http）
 
 技能是**普通 MD 操作指南**，放在 `skills/<skill-name>/SKILL.md`（agentskills.io 标准格式：YAML frontmatter + 正文），每份文档末尾含 `## 校验清单` 章节：
 
+- **skills/yoonup-workflow/SKILL.md**：工作流总入口（识别技能→读取规范→需求拆分→按序执行→末端校验），含仓库同步约定与校验清单
 - **skills/python-app-standard/SKILL.md**：Python 流程项目脚手架（目录结构、命名规范、文件锁、日志、飞书通知、运行记录、Token 重试、定时任务、run.bat 规范、运行验证 9 项）
 - **skills/web-js-app-implementation/SKILL.md**：网页 JS 逆向 / 接口直连数据抓取（token 自动化、CDP、分页、清洗、抖店登录与选店规范、滑块应对）
 
@@ -75,6 +76,9 @@ Yoonup/
 ├── mcp_server.py          # 远程 MCP Server（4 工具）
 ├── validator.py           # 校验器：解析校验清单 + 自动化检查 + 计划规划
 ├── skills/
+│   ├── yoonup-workflow/
+│   │   ├── SKILL.md       # 技能0：工作流总入口 + 仓库同步约定 + 校验清单
+│   │   └── references/    # 子技能规范文档
 │   ├── python-app-standard/
 │   │   └── SKILL.md       # 技能1：Python 流程脚手架规范 + 校验清单
 │   └── web-js-app-implementation/
