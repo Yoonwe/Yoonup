@@ -19,8 +19,7 @@ AI 产品（豆包 / Cursor / Dify / Marvis 等）远程接入，实现"任何�
     http://<服务器IP>:8000/mcp
 """
 import argparse
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from mcp.server.fastmcp import FastMCP
 

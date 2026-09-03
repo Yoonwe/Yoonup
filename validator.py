@@ -140,7 +140,10 @@ def format_checklist_text(skill_id: str) -> str:
 
 def _read_project(project_dir: str) -> Dict[str, Any]:
     """读取项目目录：文件列表、py 代码全文、run.bat 内容"""
-    files = os.listdir(project_dir) if os.path.exists(project_dir) else []
+    try:
+        files = os.listdir(project_dir) if os.path.isdir(project_dir) else []
+    except OSError:
+        files = []
     file_contents: Dict[str, str] = {}
     for f in files:
         fpath = os.path.join(project_dir, f)
@@ -427,20 +430,20 @@ def _check_bat(ctx: Dict[str, Any], auto_ids: set) -> tuple:
     bat_path = os.path.join(ctx["project_dir"], "run.bat")
     bat_exists = os.path.exists(bat_path)
 
-    def _bom_ok():
+    def _bom_ok() -> bool:
         if not bat_exists:
             return False
         with open(bat_path, "rb") as f:
             return f.read(3) == b"\xef\xbb\xbf"
 
-    def _crlf_ok():
+    def _crlf_ok() -> bool:
         if not bat_exists:
             return False
         with open(bat_path, "rb") as f:
             content = f.read()
         return b"\r\n" in content or b"\r" in content
 
-    def _first_line_ok():
+    def _first_line_ok() -> bool:
         if not bat_exists:
             return False
         with open(bat_path, "rb") as f:
