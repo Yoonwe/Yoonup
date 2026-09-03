@@ -132,6 +132,7 @@
 - **凭证处理（一次配置，长期使用）**：
   - 推送前先检查 `git credential fill` 是否返回 username；若已配置凭证，直接 `git push`，**禁止重复向用户索要 token**。
   - 若未配置，执行：`git config --global credential.helper store`，然后将 `https://<用户名>:<token>@github.com` 写入 `~/.git-credentials`（权限 600），之后所有推送自动读取，不再交互。
+  - **重要**：`~/.git-credentials` 凭证文件持久化，但 `git config --global user.name/user.email` 在新环境/新会话中可能丢失。**每次推送前必须执行**：`git config user.name "Yoonwe" && git config user.email "wanwei@352group.com.cn"`（仓库级别即可，不依赖全局配置）。
   - 换电脑/换环境时只需重新执行一次上述配置；同一环境内禁止反复索要凭证。
   - token 是敏感信息，**禁止写进技能文档、代码或提交到 git 历史**，仅存于本地 `~/.git-credentials`。
 
