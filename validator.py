@@ -163,33 +163,10 @@ def _read_project(project_dir: str) -> Dict[str, Any]:
             "bat_content": bat_content, "project_dir": project_dir}
 
 
-def _make_checker(check_map: Dict[str, Any]):
-    """构造通用检查器：check_map = {ID: 函数(ctx)->(通过:bool, 失败原因:str)}"""
-    def checker(ctx: Dict[str, Any], auto_ids: set) -> tuple:
-        passed, failed = [], []
-        for cid, fn in check_map.items():
-            if cid not in auto_ids:
-                continue
-            try:
-                ok, reason = fn(ctx)
-            except Exception as e:
-                ok, reason = False, f"检查异常: {e}"
-            if ok:
-                passed.append(cid)
-            else:
-                failed.append({"id": cid, "reason": reason})
-        return passed, failed
-    return checker
-
-
 def _has(ctx: Dict[str, Any], *needles: str) -> bool:
     """all_code 中同时包含所有关键词"""
     code = ctx["all_code"]
     return all(n in code for n in needles)
-
-
-def _bat_has(ctx: Dict[str, Any], *needles: str) -> bool:
-    return all(n in ctx["bat_content"] for n in needles)
 
 
 CHECKERS: Dict[str, Any] = {}
