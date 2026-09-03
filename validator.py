@@ -95,7 +95,7 @@ def parse_checklist(md_text: str) -> Dict[str, List[Dict[str, str]]]:
             current_cat = stripped[4:].strip()
             result.setdefault(current_cat, [])
             continue
-        m = re.match(r"^- \[([A-Z0-9_]+)\]\s*(\w+)\s*(.*)$", stripped)
+        m = re.match(r"^- \[([A-Z0-9_]+)\]\s*(auto|ai|both)\s*(.*)$", stripped)
         if m and current_cat is not None:
             result[current_cat].append({
                 "id": m.group(1),
