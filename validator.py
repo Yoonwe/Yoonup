@@ -59,6 +59,11 @@ def read_skill_md(skill: Dict[str, Any]) -> str:
 def detect_skill(requirement: str) -> str:
     """根据需求关键词自动识别技能ID（匹配不到默认 python-app-standard）"""
     req = requirement.lower()
+    yoonup_keywords = ["工作流", "yoonup", "技能同步", "更新技能", "推送技能", "仓库同步",
+                       "技能仓库", "校验清单", "技能规范", "同步到github", "推到github",
+                       "更新skill", "技能上传", "企业技能"]
+    if any(kw in req for kw in yoonup_keywords):
+        return "yoonup-workflow"
     web_keywords = ["网页", "js逆向", "js 逆向", "接口直连", "cdp", "浏览器", "后台数据",
                     "token", "逆向", "网页后台", "抓包", "加密参数", "签名"]
     if any(kw in req for kw in web_keywords):
@@ -558,6 +563,58 @@ def _check_web(ctx: Dict[str, Any], auto_ids: set) -> tuple:
 CHECKERS["网页JS逆向"] = _check_web
 
 
+# ---- 仓库同步（yoonup-workflow）----
+def _check_repo_sync(ctx: Dict[str, Any], auto_ids: set) -> tuple:
+    passed, failed = [], []
+    project_dir = ctx["project_dir"]
+
+    def _git_remote_ok() -> bool:
+        try:
+            import subprocess
+            r = subprocess.run(["git", "-C", project_dir, "remote", "-v"],
+                               capture_output=True, text=True, timeout=5)
+            return "Yoonwe/Yoonup" in r.stdout
+        except Exception:
+            return False
+
+    def _skills_json_registered() -> bool:
+        skills_path = os.path.join(project_dir, "skills.json")
+        if not os.path.exists(skills_path):
+            return False
+        try:
+            with open(skills_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            ids = {s["id"] for s in data.get("skills", [])}
+            return "yoonup-workflow" in ids
+        except Exception:
+            return False
+
+    def _no_unpushed() -> bool:
+        try:
+            import subprocess
+            r = subprocess.run(["git", "-C", project_dir, "status", "-sb"],
+                               capture_output=True, text=True, timeout=5)
+            return "ahead" not in r.stdout
+        except Exception:
+            return False
+
+    checks = {
+        "YW09": (lambda: _git_remote_ok() and _skills_json_registered(),
+                 "技能未正确同步：git remote 不是 Yoonwe/Yoonup 或 skills.json 未注册 yoonup-workflow"),
+    }
+    for cid, (fn, reason) in checks.items():
+        if cid not in auto_ids:
+            continue
+        if fn():
+            passed.append(cid)
+        else:
+            failed.append({"id": cid, "reason": reason})
+    return passed, failed
+
+
+CHECKERS["仓库同步"] = _check_repo_sync
+
+
 # ========== 整合校验入口 ==========
 
 def check_result(project_dir: str, skill_id: Optional[str] = None,
@@ -633,7 +690,21 @@ def plan_requirement(requirement: str, skill_id: Optional[str] = None) -> Dict[s
     if not skill:
         raise ValueError(f"技能ID不存在: {sid}")
 
-    if sid == "web-js-app-implementation":
+    if sid == "yoonup-workflow":
+        steps = [
+            {"step": 1, "name": "识别子技能", "action": "判断需求所属子技能（python-app-standard / web-js-app-implementation），不确定时向用户确认"},
+            {"step": 2, "name": "读取规范全文", "action": "读取对应 references 规范文件全文，含末尾校验清单章节，禁止跳过"},
+            {"step": 3, "name": "需求拆分提问", "action": "结合需求细化步骤，向用户提问确认执行顺序，由用户拍板后开始，禁止自行跳过"},
+            {"step": 4, "name": "按序执行", "action": "严格按子技能规范做事，每步开始/完成/失败实时反馈进度，发现新问题同步更新 references"},
+            {"step": 5, "name": "末端校验", "action": "按子技能校验清单逐项核对，auto 未通过项修复，全部通过才交付，给出产物路径+验证结果"},
+            {"step": 6, "name": "同步到 GitHub", "action": "若涉及技能变更，复制到仓库 skills/ 目录、更新 skills.json、commit & push 到 Yoonwe/Yoonup，禁止建新仓库"},
+        ]
+        questions = [
+            "需求所属子技能：python-app-standard（流程自动化）还是 web-js-app-implementation（网页抓取）？",
+            "是否涉及技能文件变更需要同步到 GitHub？",
+            "若需同步，改动范围：仅 SKILL.md / references / 还是 skills.json 也要更新？",
+        ]
+    elif sid == "web-js-app-implementation":
         steps = [
             {"step": 1, "name": "逆向定位接口", "action": "打开目标页，Network 筛选 XHR/Fetch 定位数据接口；必要时从前端 chunk 提取接口路径与字段映射"},
             {"step": 2, "name": "还原请求", "action": "确认请求方法/URL/参数/必要请求头/分页参数/响应结构，本地直连验证与页面数据核对"},

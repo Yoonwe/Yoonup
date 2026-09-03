@@ -26,6 +26,7 @@
 
 ### 第 0 步：识别技能
 判断需求属于哪个技能，不确定时调用 `list_skills` 查看：
+- `yoonup-workflow`：工作流总入口（识别子技能→读取规范→需求拆分→按序执行→末端校验），含仓库同步约定
 - `python-app-standard`：Python 流程项目（多子流程编排、飞书通知、定时任务、运行记录等）
 - `web-js-app-implementation`：网页后台数据抓取（JS 逆向 / 接口直连，输出影刀可用二维列表）
 
@@ -60,7 +61,24 @@
 ## 文档维护约定
 
 - 执行过程中发现的问题 / 踩坑 / 新接口经验，**必须同步更新 `skills/<skill-name>/SKILL.md`**，禁止只留在对话上下文。
-- 本仓库以 GitHub 为版本管理与同步源，改动后提交并推送保持多机一致。
+
+## 技能仓库与同步约定（必须遵守）
+
+- **唯一 GitHub 仓库**：`Yoonwe/Yoonup`（描述：技能仓储）。所有技能的版本管理与多机同步**只推这个仓库**，**禁止为技能创建新的 GitHub 仓库**。
+- **本地路径与仓库路径映射**：
+  - 本地技能目录：`.user_skills/<skill-name>/`（含 `SKILL.md`、`references/` 等）
+  - 仓库内路径：`skills/<skill-name>/`（将本地整个目录复制到仓库 `skills/` 下）
+- **更新/推送技能的标准流程**：
+  1. `git clone https://github.com/Yoonwe/Yoonup.git`（或 `git pull` 已有仓库）
+  2. 将本地技能目录复制到仓库 `skills/` 下
+  3. 在 `skills.json` 中注册该技能（id / name / file / description / check_section / check_categories）
+  4. `git add -A && git commit -m "update: <skill-name>" && git push`
+- **禁止行为**：禁止用 `gh repo create` 为技能新建仓库；禁止推送到其他仓库；禁止只改本地不同步到 GitHub。
+- **凭证处理（一次配置，长期使用）**：
+  - 推送前先检查 `git credential fill` 是否返回 username；若已配置凭证，直接 `git push`，**禁止重复向用户索要 token**。
+  - 若未配置，执行：`git config --global credential.helper store`，然后将 `https://<用户名>:<token>@github.com` 写入 `~/.git-credentials`（权限 600），之后所有推送自动读取，不再交互。
+  - 换电脑/换环境时只需重新执行一次上述配置；同一环境内禁止反复索要凭证。
+  - token 是敏感信息，**禁止写进技能文档、代码或提交到 git 历史**，仅存于本地 `~/.git-credentials`。
 
 ## 部署与接入
 
@@ -78,6 +96,9 @@ Yoonup/
 ├── mcp_server.py          # 远程 MCP Server（4 工具）
 ├── validator.py           # 校验器（解析校验清单 + 自动化检查 + 计划规划）
 ├── skills/
+│   ├── yoonup-workflow/
+│   │   ├── SKILL.md       # 技能0：工作流总入口 + 仓库同步约定 + 校验清单
+│   │   └── references/    # 子技能规范文档（agents-convention / python-app-standard / web-js-app-implementation）
 │   ├── python-app-standard/
 │   │   └── SKILL.md       # 技能1：Python 流程脚手架规范 + 校验清单
 │   └── web-js-app-implementation/
