@@ -74,6 +74,11 @@
   3. 在 `skills.json` 中注册该技能（id / name / file / description / check_section / check_categories）
   4. `git add -A && git commit -m "update: <skill-name>" && git push`
 - **禁止行为**：禁止用 `gh repo create` 为技能新建仓库；禁止推送到其他仓库；禁止只改本地不同步到 GitHub。
+- **凭证处理（一次配置，长期使用）**：
+  - 推送前先检查 `git credential fill` 是否返回 username；若已配置凭证，直接 `git push`，**禁止重复向用户索要 token**。
+  - 若未配置，执行：`git config --global credential.helper store`，然后将 `https://<用户名>:<token>@github.com` 写入 `~/.git-credentials`（权限 600），之后所有推送自动读取，不再交互。
+  - 换电脑/换环境时只需重新执行一次上述配置；同一环境内禁止反复索要凭证。
+  - token 是敏感信息，**禁止写进技能文档、代码或提交到 git 历史**，仅存于本地 `~/.git-credentials`。
 
 ## 部署与接入
 
