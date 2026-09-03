@@ -599,8 +599,8 @@ def _check_repo_sync(ctx: Dict[str, Any], auto_ids: set) -> tuple:
             return False
 
     checks = {
-        "YW09": (lambda: _git_remote_ok() and _skills_json_registered(),
-                 "技能未正确同步：git remote 不是 Yoonwe/Yoonup 或 skills.json 未注册 yoonup-workflow"),
+        "YW09": (lambda: _git_remote_ok() and _skills_json_registered() and _no_unpushed(),
+                 "技能未正确同步：git remote 不是 Yoonwe/Yoonup / skills.json 未注册 / 存在未推送提交"),
     }
     for cid, (fn, reason) in checks.items():
         if cid not in auto_ids:
