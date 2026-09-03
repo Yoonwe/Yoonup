@@ -633,8 +633,8 @@ def check_result(project_dir: str, skill_id: Optional[str] = None,
     2. auto/both 条目：能自动检查的走 CHECKERS，其余并入 AI 清单
     3. 返回自动检查结果 + 需要 AI 逐项核对的清单文本
     """
-    if not os.path.exists(project_dir):
-        return {"error": f"项目目录不存在: {project_dir}"}
+    if not os.path.isdir(project_dir):
+        return {"error": f"项目目录不存在或不是目录: {project_dir}"}
 
     skill_ids = [skill_id] if skill_id else [s["id"] for s in list_skills()]
     ctx = _read_project(project_dir)
