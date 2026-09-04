@@ -96,4 +96,10 @@ if __name__ == "__main__":
 
     mcp.settings.host = args.host
     mcp.settings.port = args.port
+
+    # 允许公网IP/域名访问（关闭DNS重绑定保护，允许所有Host和Origin）
+    mcp.settings.transport_security.enable_dns_rebinding_protection = False
+    mcp.settings.transport_security.allowed_hosts = ["*"]
+    mcp.settings.transport_security.allowed_origins = ["*"]
+
     mcp.run(transport=args.transport)
