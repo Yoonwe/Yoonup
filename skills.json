@@ -38,7 +38,7 @@
       "id": "yoonup-workflow",
       "name": "Yoonup工作流执行技能",
       "file": "yoonup-workflow/SKILL.md",
-      "description": "按Yoonup工作流规范稳定执行任务：提问→读规范→生成计划→执行→校验交付。3条铁律+5步流程，MCP工具强制校验。",
+      "description": "按Yoonup工作流规范稳定执行任务：提问→读规范→生成计划→执行→校验交付。4条铁律+5步流程+自主优化闭环，MCP工具强制校验。",
       "check_section": "校验清单",
       "check_categories": [
         "技能自检",
@@ -48,7 +48,8 @@
         "执行反馈",
         "末端校验",
         "校对质量",
-        "仓库同步"
+        "仓库同步",
+        "自主优化"
       ]
     }
   ]

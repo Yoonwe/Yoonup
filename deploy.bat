@@ -22,12 +22,12 @@ if exist E:\yoonup\new-version.zip (
 
 REM 3. 启动服务
 echo [3/4] 启动服务...
-start /B E:\app\python3.12\python.exe mcp_server.py --port 8000
+start /B E:\app\python3.12\python.exe mcp_server.py --port 8081
 
 REM 4. 验证
 echo [4/4] 等待服务启动...
 timeout /t 5 /nobreak >nul
-netstat -ano | findstr :8000 >nul && (
+netstat -ano | findstr :8081 >nul && (
     echo === 部署完成，服务正常 ===
 ) || (
     echo === 部署失败，服务未启动 ===

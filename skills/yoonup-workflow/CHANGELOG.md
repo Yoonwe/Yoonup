@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## [2026-09-04] 自主优化闭环机制 + 端口一致性修复
+
+### 新增
+- 新增「自主优化闭环」章节（core-conventions.md）：yoonup/MCP 相关对话结束时必须执行问题回顾与规范沉淀
+  - 触发条件：涉及 yoonup 工作流、MCP 服务、技能规范、部署运维的对话，不管是否调用 MCP 工具
+  - 分级处理：小优化（规范补充/措辞修正/配置修复/文档同步）自主执行；大调整（架构变更/流程重写/新增技能）必须用户确认
+  - 执行流程：修改本地 → 同步克隆仓库 → push main → GitHub Actions 自动部署 → 验证服务 → 更新 CHANGELOG
+  - 验证标准：Actions 成功 + MCP 服务可访问 + 本地与 GitHub 一致 + CHANGELOG 已记录
+- SKILL.md 铁律从 3 条增加到 4 条，新增第 4 条：yoonup/MCP 相关对话结束时不做问题回顾与规范沉淀，禁止结束
+- 校验清单新增 YW12（自主优化，ai），类别「自主优化」
+- skills.json check_categories 新增「自主优化」
+- skills.json description 更新为「4条铁律+5步流程+自主优化闭环」
+
+### 修复
+- deploy.bat 端口从 8000 修正为 8081（启动命令 + 验证端口两处）
+- deploy.sh 健康检查端口从 8000 修正为 8081
+- SKILL.md 远程 MCP 地址从 `http://<服务器IP>:8000/mcp` 修正为 `http://171.111.219.203:8081/mcp`
+- 端口一致性：全仓库统一为 8081（mcp_server.py 默认值 / Dockerfile / docker-compose / USAGE.md / DEPLOY.md 原本已是 8081，仅 deploy 脚本错误）
+
+### 问题根因记录（防止再犯）
+- deploy.bat/deploy.sh 与其他文档端口不一致，导致自动部署后服务跑在 8000 而文档/防火墙/MCP 地址全是 8081，部署后服务无法访问
+- 后续新增配置项时必须全仓库搜索确认一致性，不能只改一处
+
+
 ## [2026-09-03] 技能自检与自动更新机制
 
 ### 新增

@@ -23,7 +23,7 @@ docker compose up -d --build
 echo "[4/4] 等待服务启动..."
 for i in $(seq 1 15); do
     sleep 2
-    if curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/mcp 2>/dev/null | grep -q "200\|400\|405"; then
+    if curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/mcp 2>/dev/null | grep -q "200\|400\|405"; then
         echo "✅ 服务启动成功，健康检查通过"
         echo "=== 部署完成 ==="
         docker compose ps
