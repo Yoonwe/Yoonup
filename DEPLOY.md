@@ -5,7 +5,7 @@
 ### 1. 服务器准备
 - 云服务器（2核2G以上，Ubuntu 22.04推荐）
 - 安装 Docker + Docker Compose
-- 开放 8099 端口
+- 开放 8081 端口
 
 ### 2. 部署
 ```bash
@@ -17,14 +17,14 @@ docker compose up -d --build
 
 ### 3. 验证
 ```bash
-curl http://localhost:8099/mcp
-# 或浏览器打开 http://<服务器IP>:8099/mcp
+curl http://localhost:8081/mcp
+# 或浏览器打开 http://<服务器IP>:8081/mcp
 ```
 
 ### 4. 接入AI工具
 在 Dify/Cursor/豆包等工具的 MCP 配置中填入：
 ```
-http://<服务器IP>:8099/mcp
+http://<服务器IP>:8081/mcp
 ```
 
 ## 自动更新（推荐）

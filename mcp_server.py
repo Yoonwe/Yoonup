@@ -11,12 +11,12 @@ AI 产品（豆包 / Cursor / Dify / Marvis 等）远程接入，实现"任何�
     check_result      对执行结果做末端整合校验（自动检查 + 返回清单供 AI 核对）
 
 运行方式：
-    python mcp_server.py                 # streamable-http 传输，默认 0.0.0.0:8099
+    python mcp_server.py                 # streamable-http 传输，默认 0.0.0.0:8081
     python mcp_server.py --port 9000     # 自定义端口
     python mcp_server.py --transport sse # 兼容旧 SSE 传输（部分平台）
 
 部署到云服务器后，在 Dify / 其他 MCP 客户端填入:
-    http://<服务器IP>:8099/mcp
+    http://<服务器IP>:8081/mcp
 """
 import argparse
 from typing import Any, Dict, Optional
@@ -88,7 +88,7 @@ def check_result(project_dir: str, skill_id: Optional[str] = None,
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Yoonup 远程 MCP Server")
-    parser.add_argument("--port", type=int, default=8099, help="监听端口（默认8099）")
+    parser.add_argument("--port", type=int, default=8081, help="监听端口（默认8081）")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="监听地址（默认0.0.0.0）")
     parser.add_argument("--transport", type=str, default="streamable-http",
                         choices=["streamable-http", "sse"], help="传输协议")
