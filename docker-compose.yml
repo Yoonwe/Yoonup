@@ -5,7 +5,7 @@ services:
     build: .
     container_name: yoonup-mcp
     ports:
-      - "8000:8000"
+      - "8099:8099"
     volumes:
       - ./skills:/app/skills
     restart: unless-stopped

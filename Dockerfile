@@ -7,9 +7,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE 8000
+EXPOSE 8099
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/mcp', timeout=3)" || exit 1
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8099/mcp', timeout=3)" || exit 1
 
-CMD ["python", "mcp_server.py", "--port", "8000"]
+CMD ["python", "mcp_server.py", "--port", "8099"]
