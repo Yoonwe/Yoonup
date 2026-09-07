@@ -273,8 +273,8 @@ MCP 服务暴露 4 个工具，AI 执行任务时必须按流程调用。
 {
   "skills": [
     {"id": "yoonup-workflow", "name": "Yoonup工作流", "description": "..."},
-    {"id": "python-app-standard", "name": "Python流程标准", "description": "..."},
-    {"id": "web-js-app-implementation", "name": "网页JS抓取", "description": "..."}
+    {"id": "python-flow-scaffold", "name": "Python流程脚手架·路由入口", "description": "..."},
+    {"id": "webjs-router", "name": "JS逆向直连·路由入口", "description": "..."}
   ]
 }
 ```

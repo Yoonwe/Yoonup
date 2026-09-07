@@ -82,8 +82,8 @@
 ### 第 0 步：识别技能
 判断需求属于哪个技能，不确定时调用 `list_skills` 查看：
 - `yoonup-workflow`：工作流总入口（识别子技能→读取规范→需求拆分→按序执行→末端校验），含仓库同步约定
-- `python-app-standard`：Python 流程项目（多子流程编排、飞书通知、定时任务、运行记录等）
-- `web-js-app-implementation`：网页后台数据抓取（JS 逆向 / 接口直连，输出影刀可用二维列表）
+- `python-flow-scaffold`：Python 流程项目（多子流程编排、飞书通知、定时任务、运行记录等），路由入口，加载 py-structure / py-lock / py-log / py-feishu / py-runrecord / py-token / py-cron / py-bat / py-verify 原子子技能
+- `webjs-router`：网页后台数据抓取（JS 逆向 / 接口直连，输出影刀可用二维列表），路由入口，加载 webjs-core / webjs-login / webjs-verify 原子子技能与站点知识卡
 
 ### 第 1 步：读取技能规范（禁止跳过）
 调用 `get_skill_spec(skill_id)` 获取技能规范全文与校验清单章节。
@@ -190,12 +190,14 @@ Yoonup/
 ├── validator.py           # 校验器（解析校验清单 + 自动化检查 + 计划规划）
 ├── skills/
 │   ├── yoonup-workflow/
-│   │   ├── SKILL.md       # 技能0：工作流总入口 + 仓库同步约定 + 校验清单
-│   │   └── references/    # 子技能规范文档（agents-convention / python-app-standard / web-js-app-implementation）
-│   ├── python-app-standard/
-│   │   └── SKILL.md       # 技能1：Python 流程脚手架规范 + 校验清单
-│   └── web-js-app-implementation/
-│       └── SKILL.md       # 技能2：网页 JS 逆向抓取规范 + 校验清单
+│   │   └── SKILL.md       # 纪律元技能：工作流总入口 + 校验清单
+│   ├── python-flow-scaffold/
+│   │   └── SKILL.md       # Python 流程路由入口 + 校验清单
+│   ├── py-structure/      # 原子子技能（9 个：py-structure/py-lock/py-log/py-feishu/py-runrecord/py-token/py-cron/py-bat/py-verify）
+│   ├── webjs-router/
+│   │   └── SKILL.md       # 网页 JS 逆向路由入口 + 校验清单
+│   ├── webjs-core/        # 原子子技能（3 个：webjs-core/webjs-login/webjs-verify）
+│   └── knowledge/         # 知识卡：GLOSSARY / ADR-0001 / 站点知识卡（site-douyin-kefu）
 ├── skills.json            # 技能注册表
 ├── requirements.txt
 ├── Dockerfile
