@@ -9,20 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Package code
         run: |
-          zip -r yoonup-deploy.zip . -x "*.git*"
-          
+          zip -r new-version.zip . -x "*.git*"
+
       - name: Upload to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          source: "yoonup-deploy.zip"
-          target: "E:/yoonup/new-version.zip"
-          
+          source: "new-version.zip"
+          target: "E:/yoonup"
+
       - name: Deploy on server
         uses: appleboy/ssh-action@v1.0.3
         with:
