@@ -9,6 +9,8 @@ AI 产品（豆包 / Cursor / Dify / Marvis 等）远程接入，实现"任何�
     get_skill_spec    获取技能规范全文 + 校验清单章节
     plan_requirement  按技能规范生成执行计划骨架（含需向用户确认的问题）
     check_result      对执行结果做末端整合校验（自动检查 + 返回清单供 AI 核对）
+    list_knowledge_cards  列出知识卡（站点特例/GLOSSARY/ADR，按需加载）
+    get_knowledge_card    按 card_id 获取知识卡全文
 
 运行方式：
     python mcp_server.py                 # streamable-http 传输，默认 0.0.0.0:8081
@@ -28,6 +30,8 @@ from validator import (
     get_skill_spec as _get_skill_spec,
     plan_requirement as _plan_requirement,
     check_result as _check_result,
+    list_knowledge_cards as _list_knowledge_cards,
+    get_knowledge_card as _get_knowledge_card,
 )
 
 mcp = FastMCP("yoonup")
@@ -47,7 +51,7 @@ def get_skill_spec(skill_id: str, include_checklist: bool = True) -> Dict[str, A
     """
     获取指定技能的规范全文与校验清单章节。
     参数:
-        skill_id: 技能ID（yoonup-workflow / python-app-standard / web-js-app-implementation，可先调 list_skills 查看）
+        skill_id: 技能ID（yoonup-workflow / python-flow-scaffold / webjs-* 系列，可先调 list_skills 查看）
         include_checklist: 是否同时返回校验清单（默认 true）
     返回:
         skill_id / skill_name / description / spec（MD全文） / checklist（结构化） / checklist_text（AI核对文本）
@@ -84,6 +88,32 @@ def check_result(project_dir: str, skill_id: Optional[str] = None,
     使用约定: ai_checklist 中的条目必须由调用方 AI 结合交付物逐项核对，未通过项修复后重新校验。
     """
     return _check_result(project_dir, skill_id, include_details=include_details)
+
+
+@mcp.tool()
+def list_knowledge_cards() -> Dict[str, Any]:
+    """
+    列出知识卡目录（skills/knowledge/*.md，含站点特例/GLOSSARY/ADR 仲裁），按需加载。
+    返回:
+        cards: [{id, title, description, file}]
+    使用约定: 仅在任务命中站点特例（如抖店客服）、术语含义或历史仲裁决策时才需读取对应知识卡。
+    """
+    return {"cards": _list_knowledge_cards()}
+
+
+@mcp.tool()
+def get_knowledge_card(card_id: str) -> Dict[str, Any]:
+    """
+    按 card_id 获取知识卡全文。
+    参数:
+        card_id: 知识卡ID（如 site-douyin-kefu / glossary / adr-0001-提问边界仲裁，可先调 list_knowledge_cards 查看）
+    返回:
+        card_id / title / content（MD全文）
+    """
+    try:
+        return _get_knowledge_card(card_id)
+    except ValueError as e:
+        return {"error": str(e)}
 
 
 if __name__ == "__main__":

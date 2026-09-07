@@ -67,8 +67,8 @@ def detect_skill(requirement: str) -> str:
     web_keywords = ["网页", "js逆向", "js 逆向", "接口直连", "cdp", "浏览器", "后台数据",
                     "token", "逆向", "网页后台", "抓包", "加密参数", "签名"]
     if any(kw in req for kw in web_keywords):
-        return "web-js-app-implementation"
-    return "python-app-standard"
+        return "webjs-router"
+    return "python-flow-scaffold"
 
 
 # ========== 校验清单解析（从 MD「校验清单」章节动态读取） ==========
@@ -88,6 +88,9 @@ def parse_checklist(md_text: str) -> Dict[str, List[Dict[str, str]]]:
                 break  # 遇到下一个二级标题，校验清单章节结束
             if stripped[3:].strip() == CHECKLIST_SECTION:
                 in_section = True
+                # 原子子技能允许无 ### 分组的平铺清单，未分组条目归入"通用"
+                current_cat = "通用"
+                result.setdefault(current_cat, [])
             continue
         if not in_section:
             continue
@@ -134,6 +137,48 @@ def format_checklist_text(skill_id: str) -> str:
             tag = {"auto": "[自动]", "ai": "[AI判断]", "both": "[自动+AI]"}.get(item["method"], "")
             lines.append(f"- {item['id']} {tag} {item['description']}")
     return "\n".join(lines)
+
+
+# ========== 知识卡（v2：站点特例/GLOSSARY/ADR，不晋级技能，按需加载） ==========
+
+KNOWLEDGE_DIR = os.path.join(SKILLS_DIR, "knowledge")
+
+
+def list_knowledge_cards() -> List[Dict[str, str]]:
+    """列出知识卡目录（skills/knowledge/*.md），返回 id/title/description"""
+    cards: List[Dict[str, str]] = []
+    if not os.path.isdir(KNOWLEDGE_DIR):
+        return cards
+    for fn in sorted(os.listdir(KNOWLEDGE_DIR)):
+        if not fn.endswith(".md"):
+            continue
+        card_id = fn[:-3]
+        fpath = os.path.join(KNOWLEDGE_DIR, fn)
+        with open(fpath, "r", encoding="utf-8") as f:
+            text = f.read()
+        if text.startswith("---"):
+            parts = text.split("---", 2)
+            if len(parts) >= 3:
+                text = parts[2]
+        m = re.search(r"^#\s+(.+)$", text, re.M)
+        title = m.group(1).strip() if m else card_id
+        cards.append({"id": card_id, "title": title, "description": title, "file": f"knowledge/{fn}"})
+    return cards
+
+
+def get_knowledge_card(card_id: str) -> Dict[str, Any]:
+    """按 card_id 获取知识卡全文（如 site-douyin-kefu / glossary / adr-0001-提问边界仲裁）"""
+    for card in list_knowledge_cards():
+        if card["id"] == card_id:
+            fpath = os.path.join(SKILLS_DIR, card["file"])
+            with open(fpath, "r", encoding="utf-8") as f:
+                content = f.read()
+            if content.startswith("---"):
+                parts = content.split("---", 2)
+                if len(parts) >= 3:
+                    content = parts[2].lstrip("\n")
+            return {"card_id": card_id, "title": card["title"], "content": content}
+    raise ValueError(f"知识卡不存在: {card_id}，可用: {[c['id'] for c in list_knowledge_cards()]}")
 
 
 # ========== 自动化检查器（按类别注册，只处理 MD 中声明为 auto/both 的条目） ==========
@@ -626,6 +671,24 @@ def _check_skill_self_audit(ctx: Dict[str, Any], auto_ids: set) -> tuple:
 CHECKERS["技能自检"] = _check_skill_self_audit
 
 
+# ---- ID 前缀 → 自动检查器（v2 原子技能按条目 ID 路由，不依赖 MD 的 ### 分组名） ----
+_CHECKER_PREFIXES = [
+    ("DIR_", "目录结构"), ("NAME_", "命名规范"), ("CALL_", "调用规则"),
+    ("LOCK_", "文件锁"), ("LOG_", "日志规则"), ("PROG_", "终端进度"),
+    ("ERR_", "错误处理"), ("FEISHU_", "飞书通知"), ("RECORD_", "运行记录"),
+    ("TOKEN_", "Token与重试"), ("BAT_", "run.bat规范"), ("TOOL_", "工具脚本规范"),
+    ("PATH_", "路径规范"), ("WEB_", "网页JS逆向"),
+]
+
+
+def _find_checker(check_id: str):
+    """按校验条目 ID 前缀找到对应自动检查器；无匹配返回 None"""
+    for prefix, cat in _CHECKER_PREFIXES:
+        if check_id.startswith(prefix):
+            return CHECKERS.get(cat)
+    return None
+
+
 # ========== 整合校验入口 ==========
 
 def check_result(project_dir: str, skill_id: Optional[str] = None,
@@ -648,22 +711,28 @@ def check_result(project_dir: str, skill_id: Optional[str] = None,
 
     for sid in skill_ids:
         data = get_skill_checklist(sid)
-        checklist = data["checklist"]
-        items = flatten_checklist(checklist)
-        auto_ids = {it["id"] for it in items if it["method"] in ("auto", "both")}
+        items = flatten_checklist(data["checklist"])
+        handled: set = set()
 
-        for cat, cat_items in checklist.items():
-            checker = CHECKERS.get(cat)
-            cat_auto_ids = {it["id"] for it in cat_items if it["method"] in ("auto", "both")}
-            if checker and cat_auto_ids:
-                p, f = checker(ctx, cat_auto_ids)
-                all_passed_ids.extend(p)
-                all_failed.extend(f)
-            # 未自动覆盖的 auto 条目 + 全部 ai 条目 → 交给调用方 AI 核对
-            for item in cat_items:
-                if item["id"] not in all_passed_ids and item["id"] not in {f["id"] for f in all_failed}:
-                    ai_checklist_lines.append(
-                        f"- [{item['id']}] [{item['method']}] {item['description']}")
+        # 逐条目分派：auto/both 条目按 ID 前缀找自动检查器；找不到则降级进 AI 清单（不静默跳过）
+        for item in items:
+            if item["method"] not in ("auto", "both"):
+                continue
+            checker = _find_checker(item["id"])
+            if checker is None:
+                ai_checklist_lines.append(
+                    f"- [{item['id']}] [{item['method']}] {item['description']}（无自动化检查器，请AI核对）")
+                continue
+            p, f = checker(ctx, {item["id"]})
+            all_passed_ids.extend(p)
+            all_failed.extend(f)
+            handled.add(item["id"])
+
+        # 全部 ai 条目 + 未被自动检查覆盖的条目 → 交给调用方 AI 核对
+        for item in items:
+            if item["id"] not in handled:
+                ai_checklist_lines.append(
+                    f"- [{item['id']}] [{item['method']}] {item['description']}")
 
     # 去重
     all_passed_ids = sorted(set(all_passed_ids))
@@ -703,19 +772,19 @@ def plan_requirement(requirement: str, skill_id: Optional[str] = None) -> Dict[s
 
     if sid == "yoonup-workflow":
         steps = [
-            {"step": 1, "name": "识别子技能", "action": "判断需求所属子技能（python-app-standard / web-js-app-implementation），不确定时向用户确认"},
-            {"step": 2, "name": "读取规范全文", "action": "读取对应 references 规范文件全文，含末尾校验清单章节，禁止跳过"},
+            {"step": 1, "name": "识别子技能", "action": "判断需求所属技能族（python-flow-scaffold / webjs-router / 知识卡），不确定时向用户确认"},
+            {"step": 2, "name": "读取规范", "action": "get_skill_spec(router id) 拿路由表，再按需 get_skill_spec 加载命中原子子技能 / get_knowledge_card 知识卡，禁止无脑读取全部技能文档"},
             {"step": 3, "name": "需求拆分提问", "action": "结合需求细化步骤，向用户提问确认执行顺序，由用户拍板后开始，禁止自行跳过"},
-            {"step": 4, "name": "按序执行", "action": "严格按子技能规范做事，每步开始/完成/失败实时反馈进度，发现新问题同步更新 references"},
-            {"step": 5, "name": "末端校验", "action": "按子技能校验清单逐项核对，auto 未通过项修复，全部通过才交付，给出产物路径+验证结果"},
+            {"step": 4, "name": "按序执行", "action": "严格按原子子技能规范做事，每步开始/完成/失败实时反馈进度，发现新问题同步更新技能文档"},
+            {"step": 5, "name": "末端校验", "action": "按命中子技能校验清单逐项核对，auto 未通过项修复，全部通过才交付，给出产物路径+验证结果"},
             {"step": 6, "name": "同步到 GitHub", "action": "若涉及技能变更，复制到仓库 skills/ 目录、更新 skills.json、commit & push 到 Yoonwe/Yoonup，禁止建新仓库"},
         ]
         questions = [
-            "需求所属子技能：python-app-standard（流程自动化）还是 web-js-app-implementation（网页抓取）？",
+            "需求所属技能族：python-flow-scaffold（流程自动化）还是 webjs-router（网页抓取）？",
             "是否涉及技能文件变更需要同步到 GitHub？",
-            "若需同步，改动范围：仅 SKILL.md / references / 还是 skills.json 也要更新？",
+            "若需同步，改动范围：仅 SKILL.md / 原子子技能 / 知识卡 / 还是 skills.json 也要更新？",
         ]
-    elif sid == "web-js-app-implementation":
+    elif sid.startswith("webjs"):
         steps = [
             {"step": 1, "name": "逆向定位接口", "action": "打开目标页，Network 筛选 XHR/Fetch 定位数据接口；必要时从前端 chunk 提取接口路径与字段映射"},
             {"step": 2, "name": "还原请求", "action": "确认请求方法/URL/参数/必要请求头/分页参数/响应结构，本地直连验证与页面数据核对"},
@@ -785,7 +854,7 @@ if __name__ == "__main__":
             req = sys.argv[2] if len(sys.argv) > 2 else "示例需求"
             print(json.dumps(plan_requirement(req), ensure_ascii=False, indent=2))
         elif arg == "spec":
-            sid = sys.argv[2] if len(sys.argv) > 2 else "python-app-standard"
+            sid = sys.argv[2] if len(sys.argv) > 2 else "python-flow-scaffold"
             data = get_skill_spec(sid)
             print(f"技能: {data['skill_id']} - {data['skill_name']}")
             print(f"规范长度: {len(data['spec'])} 字符")

@@ -1,34 +1,146 @@
 {
   "skills": [
     {
-      "id": "python-app-standard",
-      "name": "python应用规范技能",
-      "file": "python-app-standard/SKILL.md",
-      "description": "Python流程项目脚手架，包含目录结构、命名规范、文件锁、日志、飞书通知、定时任务等",
+      "id": "python-flow-scaffold",
+      "name": "Python流程脚手架·路由入口",
+      "file": "python-flow-scaffold/SKILL.md",
+      "description": "Python流程自动化路由入口。触发即按router路由加载py-structure/lock/log/feishu等命中子技能，禁止重读旧39k单体全文。含工具脚本规范(TOOL)与AI生成行为约束(ADR-0001)。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "工具脚本规范",
+        "路由编排"
+      ]
+    },
+    {
+      "id": "py-structure",
+      "name": "目录结构与命名规范",
+      "file": "py-structure/SKILL.md",
+      "description": "Python项目骨架：目录结构(主流程/子流程/通知/运行记录/临时/logs/run.bat)、中文变量命名+类型注解、每行注释、子流程run(tmp_dir,prev_file)->dict接口、主流程--limit参数、桌面路径expanduser。",
       "check_section": "校验清单",
       "check_categories": [
         "目录结构",
         "命名规范",
         "调用规则",
-        "文件锁",
+        "路径规范"
+      ]
+    },
+    {
+      "id": "py-lock",
+      "name": "文件锁防并发",
+      "file": "py-lock/SKILL.md",
+      "description": ".running.lock文件锁+PID存活检测防并发；锁放项目根目录；LOCK_HELD持有标志防误删；LOCK_TIMEOUT_HOURS与计划任务ExecutionTimeLimit一致。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "文件锁"
+      ]
+    },
+    {
+      "id": "py-log",
+      "name": "日志/进度/错误处理",
+      "file": "py-log/SKILL.md",
+      "description": "单文件日志(成功-N条/汇总/保留10个)、\\r+\\033[K同行动态进度(禁tqdm)、失败即停+notify_groups通知。",
+      "check_section": "校验清单",
+      "check_categories": [
         "日志规则",
         "终端进度",
-        "错误处理",
-        "飞书通知",
-        "运行记录",
-        "Token与重试",
-        "定时任务",
-        "run.bat规范",
-        "工具脚本规范",
-        "路径规范",
+        "错误处理"
+      ]
+    },
+    {
+      "id": "py-feishu",
+      "name": "飞书通知模块",
+      "file": "py-feishu/SKILL.md",
+      "description": "通知.py：APP_ID/APP_SECRET凭证、失败通知群(万威/黄俊文/肖晓雯)、reply_message回复指定message_id、通知函数返回dict并打印。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "飞书通知"
+      ]
+    },
+    {
+      "id": "py-runrecord",
+      "name": "运行记录多维表格",
+      "file": "py-runrecord/SKILL.md",
+      "description": "运行记录.py：APP_TOKEN/TABLE_ID、report_run_record写入、今日同应用覆盖更新、应用名=os.path.basename(ROOT_DIR)、校验code字段。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "运行记录"
+      ]
+    },
+    {
+      "id": "py-token",
+      "name": "外部API Token治理",
+      "file": "py-token/SKILL.md",
+      "description": "Token缓存自动刷新(提前5分钟)、HTTP显式timeout、外部API重试3次、批量失败跳批不中断、慢接口不重复重试。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "Token与重试"
+      ]
+    },
+    {
+      "id": "py-cron",
+      "name": "Windows计划任务",
+      "file": "py-cron/SKILL.md",
+      "description": "PowerShell Register-ScheduledTask固定写法：每小时重复、DailyTrigger(2)+Repetition、ExecutionTimeLimit=PT4H、MultipleInstances=IgnoreNew。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "定时任务"
+      ]
+    },
+    {
+      "id": "py-bat",
+      "name": "run.bat手动入口",
+      "file": "py-bat/SKILL.md",
+      "description": "run.bat：UTF-8 with BOM+CRLF、首行留空、固定独立Python绝对路径(Python311)、PYTHONDONTWRITEBYTECODE=1。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "run.bat规范"
+      ]
+    },
+    {
+      "id": "py-verify",
+      "name": "运行验证协议",
+      "file": "py-verify/SKILL.md",
+      "description": "九步验证：空跑/联调(--limit小样本)/失败路径/日志/定时任务/运行记录/锁机制/长任务健壮性/独立Python。",
+      "check_section": "校验清单",
+      "check_categories": [
         "运行验证"
       ]
     },
     {
-      "id": "web-js-app-implementation",
-      "name": "web-js应用实施技能",
-      "file": "web-js-app-implementation/SKILL.md",
-      "description": "通过JS逆向与接口直连完成网页后台数据抓取，输出影刀可用的二维列表",
+      "id": "webjs-router",
+      "name": "JS逆向直连·路由入口",
+      "file": "webjs-router/SKILL.md",
+      "description": "网页JS逆向路由入口：接口直连禁止模拟人工、token自动读取、执行前必问清单(B类决策)、按需加载webjs-core/login/verify与站点知识卡。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "网页JS逆向"
+      ]
+    },
+    {
+      "id": "webjs-core",
+      "name": "逆向通用流程与三层脚本",
+      "file": "webjs-core/SKILL.md",
+      "description": "Network定位XHR接口→还原请求→token读取→三层脚本(配置区/通用模块/业务函数)：Chrome路径自动探测、依赖自动安装、分页取全量、失败码清缓存重取、数据清洗、结果extend展平去重。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "网页JS逆向"
+      ]
+    },
+    {
+      "id": "webjs-login",
+      "name": "登录态保全与CDP",
+      "file": "webjs-login/SKILL.md",
+      "description": "独立user-data-dir+CDP调试实例、cookie导出独立JSON、滑块注入缓存→人工一次→固定指纹→拟人节奏→兜底自动。",
+      "check_section": "校验清单",
+      "check_categories": [
+        "网页JS逆向"
+      ]
+    },
+    {
+      "id": "webjs-verify",
+      "name": "数据验证与交付",
+      "file": "webjs-verify/SKILL.md",
+      "description": "输出二维列表/字典、YYYY-MM-DD日期变量、顶部可配置区、交付带request字段的JSON、交付前自行运行验证。站点特例查get_knowledge_card。",
       "check_section": "校验清单",
       "check_categories": [
         "网页JS逆向"
@@ -36,18 +148,12 @@
     },
     {
       "id": "yoonup-workflow",
-      "name": "Yoonup工作流执行技能",
+      "name": "纪律元技能",
       "file": "yoonup-workflow/SKILL.md",
-      "description": "按Yoonup工作流规范稳定执行任务：提问→读规范→生成计划→执行→校验交付。3条铁律+5步流程，MCP工具强制校验。",
+      "description": "5条铁律+5步流程：完整提取需求、只加载命中子技能(禁读全部)、产出可评审清单、保留可交接信息、变更同步推送仓库。B类决策必须提问(ADR-0001)。",
       "check_section": "校验清单",
       "check_categories": [
         "技能自检",
-        "技能识别",
-        "规范读取",
-        "需求拆分",
-        "执行反馈",
-        "末端校验",
-        "校对质量",
         "仓库同步"
       ]
     }
