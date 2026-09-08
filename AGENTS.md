@@ -56,7 +56,7 @@
 
 ### 自检内容（逐项检查）
 
-1. **文件完整性**：`SKILL.md`、`references/` 下规范文件、`CHANGELOG.md`、`README.md`、`.gitignore` 全部存在
+1. **文件完整性**：`AGENTS.md`、`README.md`、`USAGE.md`、`skills.json`、`validator.py`、`mcp_server.py`、`Dockerfile`、`docker-compose.yml`、`.gitignore`、`requirements.txt` 及 `skills/*/SKILL.md` 全部存在，无 v1 遗留目录（`references/`、`dist/` 旧 zip）
 2. **注册一致性**：`skills.json` 中注册的技能与 `skills/` 实际目录一致，字段完整
 3. **校验清单可解析**：`validator.py` 能正确解析所有技能的校验清单，ID 唯一，类别与 `check_categories` 一致
 4. **CHECKERS 覆盖**：所有 `auto`/`both` 条目的类别都有对应的检查器，无死代码
@@ -136,8 +136,8 @@
 
 ## 校对维度清单（每次校对必须覆盖以下全部维度）
 
-### 第 1 轮：结构与一致性（10 项）
-最新提交、技能注册字段、校验清单解析、CHECKERS覆盖、本地GitHub文件一致、AGENTS↔references一致、references↔skills一致、Python语法、无BOM、dist zip一致
+### 第 1 轮：结构与一致性（9 项）
+最新提交、技能注册字段、注册文件存在、校验清单解析、CHECKERS覆盖、Python语法、无BOM、AGENTS.md完整、check_section匹配
 
 ### 第 2 轮：逻辑与边界（6 类用例）
 check_result边界、get_skill_checklist边界、detect_skill边界、plan_requirement边界、检查器正反用例、parse_checklist边界

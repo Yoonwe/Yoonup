@@ -6,11 +6,11 @@ Yoonup 技能仓库自动化校对脚本（audit.py）
 AI 调用技能时必须运行本脚本，退出码非零即不通过，必须修复后重跑。
 
 用法：
-    python3 audit.py              # 完整三轮校对
-    python3 audit.py --round 1    # 只跑第1轮（结构与一致性）
-    python3 audit.py --round 2    # 只跑第2轮（逻辑与边界）
-    python3 audit.py --round 3    # 只跑第3轮（安全与运维）
-    python3 audit.py --quality    # 只跑代码质量专项
+    python audit.py              # 完整三轮校对
+    python audit.py --round 1    # 只跑第1轮（结构与一致性）
+    python audit.py --round 2    # 只跑第2轮（逻辑与边界）
+    python audit.py --round 3    # 只跑第3轮（安全与运维）
+    python audit.py --quality    # 只跑代码质量专项
 
 退出码：0=全部通过，1=有未通过项
 """
@@ -26,6 +26,13 @@ from typing import List, Dict, Any, Tuple
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, BASE_DIR)
+
+# Windows 控制台兼容：emoji/中文输出不因 cp936 编码崩溃
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 PASS = 0
 FAIL = 0
@@ -51,7 +58,7 @@ def round1_structure():
     # 1.1 最新提交
     try:
         r = subprocess.run(["git", "-C", BASE_DIR, "log", "--oneline", "-1"],
-                           capture_output=True, text=True, timeout=5)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5)
         record("最新提交", r.returncode == 0, r.stdout.strip())
     except Exception as e:
         record("最新提交", False, str(e))
@@ -99,15 +106,19 @@ def round1_structure():
             for it in flatten_checklist(get_skill_checklist(s["id"])["checklist"]):
                 if it["method"] in ("auto", "both"):
                     auto_cats.add(it["category"])
-        missing = auto_cats - set(CHECKERS.keys())
+        # v2 中无前缀 auto/both 条目按设计归入『通用』组并降级进 AI 清单，不属缺失检查器
+        missing = auto_cats - set(CHECKERS.keys()) - {"通用"}
         record("CHECKERS覆盖", len(missing) == 0,
                f"{len(CHECKERS)}个检查器, 缺={missing if missing else '无'}")
     except Exception as e:
         record("CHECKERS覆盖", False, str(e))
 
     # 1.5 Python 语法
-    ok1 = os.system(f"python3 -m py_compile {os.path.join(BASE_DIR, 'validator.py')}") == 0
-    ok2 = os.system(f"python3 -m py_compile {os.path.join(BASE_DIR, 'mcp_server.py')}") == 0
+    py = sys.executable or "python"
+    ok1 = subprocess.run([py, "-m", "py_compile", os.path.join(BASE_DIR, "validator.py")],
+                         capture_output=True).returncode == 0
+    ok2 = subprocess.run([py, "-m", "py_compile", os.path.join(BASE_DIR, "mcp_server.py")],
+                         capture_output=True).returncode == 0
     record("Python语法", ok1 and ok2, "validator.py + mcp_server.py" if ok1 and ok2 else "有语法错误")
 
     # 1.6 无 BOM
@@ -126,47 +137,34 @@ def round1_structure():
                     pass
     record("无BOM", len(bom_files) == 0, f"BOM文件={bom_files if bom_files else '无'}")
 
-    # 1.7 AGENTS.md ↔ references 一致
+    # 1.7 AGENTS.md 完整性（v2 已无 references 镜像，改为检查核心约定在册）
     agents = os.path.join(BASE_DIR, "AGENTS.md")
-    ref_agents = os.path.join(BASE_DIR, "skills/yoonup-workflow/references/agents-convention.md")
-    if os.path.exists(agents) and os.path.exists(ref_agents):
-        with open(agents, encoding="utf-8") as f1, open(ref_agents, encoding="utf-8") as f2:
-            same = f1.read() == f2.read()
-        record("AGENTS.md↔references一致", same)
-    else:
-        record("AGENTS.md↔references一致", False, "文件不存在")
-
-    # 1.8 references ↔ skills 对应文件一致
-    pairs = [
-        ("skills/yoonup-workflow/references/python-app-standard.md", "skills/python-app-standard/SKILL.md"),
-        ("skills/yoonup-workflow/references/web-js-app-implementation.md", "skills/web-js-app-implementation/SKILL.md"),
-    ]
-    all_ok = True
-    for a, b in pairs:
-        pa, pb = os.path.join(BASE_DIR, a), os.path.join(BASE_DIR, b)
-        if os.path.exists(pa) and os.path.exists(pb):
-            with open(pa, encoding="utf-8") as f1, open(pb, encoding="utf-8") as f2:
-                if f1.read() != f2.read():
-                    all_ok = False
+    agents_ok = False
+    detail = "AGENTS.md 不存在"
+    if os.path.exists(agents):
+        with open(agents, encoding="utf-8") as f:
+            content = f.read()
+        if "## 技能仓库与同步约定" in content:
+            agents_ok = True
+            detail = "含同步约定章节"
         else:
-            all_ok = False
-    record("references↔skills一致", all_ok)
+            detail = "缺『技能仓库与同步约定』章节"
+    record("AGENTS.md完整", agents_ok, detail)
 
-    # 1.9 dist zip 内容一致
-    all_ok = True
-    for skill in ["python-app-standard", "web-js-app-implementation", "yoonup-workflow"]:
-        zip_path = os.path.join(BASE_DIR, f"dist/{skill}.zip")
-        if not os.path.exists(zip_path):
-            all_ok = False
-            continue
-        with tempfile.TemporaryDirectory() as td:
-            subprocess.run(["unzip", "-q", zip_path, "-d", td], capture_output=True)
-            r = subprocess.run(["diff", "-rq", os.path.join(td, skill),
-                                os.path.join(BASE_DIR, f"skills/{skill}")],
-                               capture_output=True, text=True)
-            if r.returncode != 0:
-                all_ok = False
-    record("dist zip一致", all_ok)
+    # 1.8 skills.json 注册文件全部存在
+    try:
+        with open(os.path.join(BASE_DIR, "skills.json"), encoding="utf-8") as f:
+            cfg = json.load(f)
+        missing_files = []
+        for s in cfg["skills"]:
+            md_path = os.path.join(BASE_DIR, "skills", s["file"])
+            if not os.path.exists(md_path):
+                missing_files.append(s["file"])
+        record("注册文件存在", len(missing_files) == 0,
+               f"{len(cfg['skills'])}个注册技能, " +
+               (f"缺失={missing_files}" if missing_files else "全部存在"))
+    except Exception as e:
+        record("注册文件存在", False, str(e))
 
     # 1.10 check_section 字段匹配
     try:
@@ -198,17 +196,19 @@ def round2_logic():
     r = check_result("/nonexistent/xyz/123", "yoonup-workflow")
     record("check_result不存在路径返回error", "error" in r, r.get("error", ""))
 
-    # 2.3 check_result: 空目录 YW00 失败
+    # 2.3 check_result: 空目录上 DIR_ 前缀 auto 条目失败
     with tempfile.TemporaryDirectory() as td:
-        r = check_result(td, "yoonup-workflow")
-        yw00_fail = any(f["id"] == "YW00" for f in r["auto_failed"])
-        record("check_result空目录YW00失败", yw00_fail,
+        r = check_result(td, "py-structure")
+        dir_fail = any(str(f["id"]).startswith("DIR_") for f in r["auto_failed"])
+        record("check_result空目录DIR_失败", dir_fail,
                f"failed={[f['id'] for f in r['auto_failed']]}")
 
-    # 2.4 check_result: 正常目录通过
+    # 2.4 check_result: yoonup-workflow（全 ai 条目）不丢清单
     r = check_result(BASE_DIR, "yoonup-workflow")
-    record("check_result正常目录通过", r["all_auto_passed"],
-           f"passed={r['auto_passed']}")
+    ai_text = r["ai_checklist"] or ""
+    ai_ok = r["all_auto_passed"] and "YW01" in ai_text and "ASK_001" in ai_text
+    record("check_result yoonup不丢条目", ai_ok,
+           f"ai清单={len(ai_text)}行")
 
     # 2.5 get_skill_checklist: 不存在ID报错
     try:
@@ -218,16 +218,16 @@ def round2_logic():
         record("get_skill_checklist不存在ID报错", True)
 
     # 2.6 detect_skill: 空字符串
-    record("detect_skill空字符串", detect_skill("") == "python-app-standard")
+    record("detect_skill空字符串", detect_skill("") == "python-flow-scaffold")
 
     # 2.7 detect_skill: 各技能关键词
     record("detect_skill yoonup", detect_skill("更新技能推到github") == "yoonup-workflow")
-    record("detect_skill web", detect_skill("js逆向抓包token") == "web-js-app-implementation")
-    record("detect_skill python", detect_skill("定时任务飞书通知") == "python-app-standard")
+    record("detect_skill web", detect_skill("js逆向抓包token") == "webjs-router")
+    record("detect_skill python", detect_skill("定时任务飞书通知") == "python-flow-scaffold")
 
-    # 2.8 plan_requirement: 三个技能都有 steps 和 questions
+    # 2.8 plan_requirement: 三个入口技能都有 steps 和 questions
     all_ok = True
-    for sid in ["python-app-standard", "web-js-app-implementation", "yoonup-workflow"]:
+    for sid in ["python-flow-scaffold", "webjs-router", "yoonup-workflow"]:
         p = plan_requirement("test", sid)
         if len(p["plan_steps"]) == 0 or len(p["questions_to_user"]) == 0:
             all_ok = False
@@ -268,7 +268,7 @@ def round3_security():
     # 3.2 git 历史敏感信息
     try:
         r = subprocess.run(["git", "-C", BASE_DIR, "log", "--all", "-p"],
-                           capture_output=True, text=True, timeout=10)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10)
         has_token = bool(re.search(r"github_pat_[a-zA-Z0-9_]{20,}", r.stdout))
         record("git历史无token", not has_token)
     except Exception as e:
@@ -289,8 +289,9 @@ def round3_security():
 
     # 3.4 MCP 启动
     try:
-        r = subprocess.run(["python3", os.path.join(BASE_DIR, "mcp_server.py")],
-                           capture_output=True, text=True, timeout=3)
+        py = sys.executable or "python"
+        r = subprocess.run([py, os.path.join(BASE_DIR, "mcp_server.py")],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5)
         record("MCP启动成功", "startup complete" in r.stdout.lower() or "started" in r.stdout.lower())
     except subprocess.TimeoutExpired:
         record("MCP启动成功", True, "进程正常运行（超时=启动成功）")
@@ -300,14 +301,14 @@ def round3_security():
     # 3.5 Docker 配置
     dockerfile = os.path.join(BASE_DIR, "Dockerfile")
     compose = os.path.join(BASE_DIR, "docker-compose.yml")
-    df_ok = os.path.exists(dockerfile) and "python" in open(dockerfile).read().lower()
-    dc_ok = os.path.exists(compose) and "8000" in open(compose).read()
+    df_ok = os.path.exists(dockerfile) and "python" in open(dockerfile, encoding="utf-8").read().lower()
+    dc_ok = os.path.exists(compose) and "8081" in open(compose, encoding="utf-8").read()
     record("Docker配置正确", df_ok and dc_ok)
 
     # 3.6 依赖
     try:
         import mcp  # noqa
-        import fastapi  # noqa
+        import requests  # noqa
         record("依赖已安装", True)
     except ImportError as e:
         record("依赖已安装", False, str(e))
@@ -315,7 +316,7 @@ def round3_security():
     # 3.7 git 状态（无未推送）
     try:
         r = subprocess.run(["git", "-C", BASE_DIR, "status", "-sb"],
-                           capture_output=True, text=True, timeout=5)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=5)
         record("无未推送提交", "ahead" not in r.stdout)
     except Exception as e:
         record("无未推送提交", False, str(e))

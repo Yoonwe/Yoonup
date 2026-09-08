@@ -681,7 +681,7 @@ _CHECKER_PREFIXES = [
 ]
 
 
-def _find_checker(check_id: str):
+def _find_checker(check_id: str) -> Optional[Any]:
     """按校验条目 ID 前缀找到对应自动检查器；无匹配返回 None"""
     for prefix, cat in _CHECKER_PREFIXES:
         if check_id.startswith(prefix):
